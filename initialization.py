@@ -3,7 +3,7 @@ import rospy
 from visualization_msgs.msg import Marker
 
 
-def initializeMarkers():
+def initPathMarkers():
 
     # cannot write in one equation!!!
     sourcePoint     = Marker()
@@ -84,37 +84,46 @@ def initializeMarkers():
 
     return (sourcePoint, goalPoint, neighbourPoint, finalPath)
 
-def initializeBoundandObst():
+def initBoundMarker():
     boundary = Marker()
-    obstacle = Marker()
 
-    boundary.header.frame_id    = 'path_planner'
-    obstacle.header.frame_id    = 'path_planner'
-
-    boundary.header.stamp   = rospy.get_rostime()
-    obstacle.header.stamp   = rospy.get_rostime()
-
+    boundary.header.frame_id = 'path_planner'
+    boundary.header.stamp = rospy.get_rostime()
     boundary.ns = "path_planner"
-    obstacle.ns = "path_planner"
-
     boundary.action = 0     # add/modify an object
-    obstacle.action = 0
-
     boundary.id = 110
-    obstacle.id = 111
-
-    boundary.type   = 4 # Line Strip
-    obstacle.type   = 5 # Line List
+    boundary.type = 4 # Line Strip
 
     boundary.pose.orientation.w = 1.0
-    obstacle.pose.orientation.w = 1.0
-
     boundary.scale.x    = 1 # scale.x controls the width of the line segments
-    obstacle.scale.x    = 0.3
+    boundary.color.r = 0.0
+    boundary.color.g = 0.0
+    boundary.color.b = 0.0
+    boundary.color.a = 1.0
 
-    boundary.color.r = obstacle.color.r = 0.0
-    boundary.color.g = obstacle.color.g = 0.0
-    boundary.color.b = obstacle.color.b = 0.0
-    boundary.color.a = obstacle.color.a = 1.0
+    return boundary
 
-    return (boundary, obstacle)
+
+def initObstMarker():
+    obstacle = Marker()
+
+    obstacle.header.frame_id = 'path_planner'
+    obstacle.header.stamp = rospy.get_rostime()
+    obstacle.ns = "path_planner"
+    obstacle.action = 0 # add/modify an object
+    obstacle.id = 111
+    obstacle.type = 5 # Line List
+
+    obstacle.pose.orientation.w = 1.0
+    obstacle.scale.x = 0.3
+    obstacle.color.r = 0.0
+    obstacle.color.g = 0.0
+    obstacle.color.b = 0.0
+    obstacle.color.a = 1.0
+
+    return obstacle
+
+
+def initPublishers():
+    pathPub = rospy.Publisher('pp_markers', Marker, queue_size=10) # rostopic name
+    return pathPub

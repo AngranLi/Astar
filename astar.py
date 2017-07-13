@@ -3,6 +3,7 @@ import collections
 import heapq
 import random
 import initialization
+import visualization
 from geometry_msgs.msg import PointStamped, Point
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
@@ -167,139 +168,60 @@ def a_star_search(graph, start, goal):
     return came_from, cost_so_far
 
 ##########################################################
-
-# rospy.init_node('my_node', log_level=rospy.FATAL)
-
+# Initialization
 scale = 10
 
 height_of_map = int(3*scale)
 width_of_map = int(6*scale)
 start_point = (int(0*scale), int(0*scale))
+# end_point = (int(0*scale), int(0*scale))
 end_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale))
-centre_of_rectangle_obstacle = (int(random.uniform(0,3)*scale), int(random.uniform(0,6)*scale))
+# centre_of_rectangle_obstacle = (int(random.uniform(0,3)*scale), int(random.uniform(0,6)*scale))
 
-diagram1 = GridWithWeights(width_of_map, height_of_map)
-diagram1.walls = generateObstacle(centre_of_rectangle_obstacle)
+diagram = GridWithWeights(width_of_map, height_of_map)
+diagram.walls = []
+# diagram.walls = generateObstacle(centre_of_rectangle_obstacle)
 
-# diagram2 = GridWithWeights(width_of_map, height_of_map)
-# diagram2.walls = DIAGRAM1_WALLS
-#
+
 print 'end_point: ', end_point
-# print 'diagram1.walls: \n', diagram1.walls
 print
 
-markerPub = rospy.Publisher('pp_markers', Marker, queue_size=10) # rostopic name
-obstPub = rospy.Publisher('obst_markers', Marker, queue_size=10)
 rospy.init_node('markers_pub', anonymous=True) # rosnode name
+obstPub = rospy.Publisher('obst_markers', Marker, queue_size=10)
 
-(boundary, obstacle) = initialization.initializeBoundandObst()
+boundary = visualization.setBoundary(height_of_map, width_of_map)
+obstacle = visualization.setObstacle(diagram.walls)
 
-# first point
-tempPoint = Point()
-tempPoint.x = 0
-tempPoint.y = 0
-tempPoint.z = 0
-boundary.points.append(tempPoint)
 
-# second point
-tempPoint = Point()
-tempPoint.x = height_of_map
-tempPoint.y = 0
-tempPoint.z = 0
-boundary.points.append(tempPoint)
-
-# third point
-tempPoint = Point()
-tempPoint.x = height_of_map
-tempPoint.y = width_of_map
-tempPoint.z = 0
-boundary.points.append(tempPoint)
-
-# fourth point
-tempPoint = Point()
-tempPoint.x = 0
-tempPoint.y = width_of_map
-tempPoint.z = 0
-boundary.points.append(tempPoint)
-
-# first point again to complete the box
-tempPoint = Point()
-tempPoint.x = 0
-tempPoint.y = 0
-tempPoint.z = 0
-boundary.points.append(tempPoint)
-
-for point in diagram1.walls:
-    tempPoint = Point()
-    tempPoint.x = point[1]
-    tempPoint.y = point[0]
-    tempPoint.z = 0
-    obstacle.points.append(tempPoint)
-
-for point in diagram1.walls:
+for point in diagram.walls:
     if point == start_point or point == end_point:
         print 'Starting point / destination conflicts with obstacle!'
         break
 else:
-    came_from, cost_so_far = a_star_search(diagram1, start_point, end_point)
+    # Plan the path
+    came_from, cost_so_far = a_star_search(diagram, start_point, end_point)
     finalTrajectory = reconstruct_path(came_from, start=start_point, goal=end_point)
 
     # These four values are all visualization markers!
-    (sourcePoint, goalPoint, neighbourPoint, finalPath) = initialization.initializeMarkers()
+    (sourcePoint, goalPoint, neighbourPoint,
+        finalPath) = visualization.setPathMarkers(finalTrajectory, came_from)
 
-    searchedPoints = []
-    for key in came_from:
-        searchedPoints.append(came_from[key])
-    searchedPoints.remove(None)
-    for i in range(len(searchedPoints)):
-        tempPoint = Point()
-        tempPoint.z = 0
-        tempPoint.x = searchedPoints[i][1]
-        tempPoint.y = searchedPoints[i][0]
-        neighbourPoint.points.append(tempPoint)
-
-    for i in range(len(finalTrajectory)):
-        tempPoint = Point()
-        tempPoint.z = 0
-        tempPoint.x = finalTrajectory[i][1]
-        tempPoint.y = finalTrajectory[i][0]
-        finalPath.points.append(tempPoint)
-
-    tempPoint = Point()
-    tempPoint.x = finalTrajectory[0][1]
-    tempPoint.y = finalTrajectory[0][0]
-    tempPoint.z = 0
-    sourcePoint.points.append(tempPoint)
-    sourcePoint.pose.position.x = finalTrajectory[0][1]
-    sourcePoint.pose.position.y = finalTrajectory[0][0]
-
-    tempPoint = Point()
-    tempPoint.x = finalTrajectory[len(finalTrajectory)-1][1]
-    tempPoint.y = finalTrajectory[len(finalTrajectory)-1][0]
-    tempPoint.z = 0
-    goalPoint.points.append(tempPoint)
-    goalPoint.pose.position.x = finalTrajectory[len(finalTrajectory)-1][1]
-    goalPoint.pose.position.y = finalTrajectory[len(finalTrajectory)-1][0]
-
-    rate = rospy.Rate(10)
+    rate = rospy.Rate(100)
+    pathPub = initialization.initPublishers()
     while not rospy.is_shutdown():
-        markerPub.publish(boundary)
-        markerPub.publish(obstacle)
-        markerPub.publish(sourcePoint)
-        markerPub.publish(goalPoint)
-        markerPub.publish(neighbourPoint)
-        markerPub.publish(finalPath)
+        pathPub.publish(boundary)
+        pathPub.publish(obstacle)
+        pathPub.publish(sourcePoint)
+        pathPub.publish(goalPoint)
+        pathPub.publish(neighbourPoint)
+        pathPub.publish(finalPath)
         rate.sleep()
 
     # rospy.spin()
 
-
-    # print 'finalTrajectory: \n', finalTrajectory
-    # print
-    # print 'came_from: \n', type(came_from), came_from
-    # print
-    draw_grid(diagram1, width=1, point_to=came_from, start=start_point, goal=end_point)
+    print
+    draw_grid(diagram, width=1, point_to=came_from, start=start_point, goal=end_point)
     # print()
-    # draw_grid(diagram1, width=1, number=cost_so_far, start=start_point, goal=end_point)
+    # draw_grid(diagram, width=1, number=cost_so_far, start=start_point, goal=end_point)
     # print()
-    # draw_grid(diagram1, width=1, path=finalTrajectory)
+    # draw_grid(diagram, width=1, path=finalTrajectory)
