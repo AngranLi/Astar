@@ -82,8 +82,8 @@ class pp_pub():
                 p0.z = 0.0
 
                 p1 = Point()
-                p1.x = random.uniform(1, 3)
-                p1.y = random.uniform(1, 6)
+                p1.x = random.uniform(1, 6)
+                p1.y = random.uniform(1, 3)
                 p1.z = 0.0
 
                 self.pp_request.points[0] = p0
