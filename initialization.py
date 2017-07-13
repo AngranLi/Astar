@@ -112,10 +112,15 @@ def initObstMarker():
     obstacle.ns = "path_planner"
     obstacle.action = 0 # add/modify an object
     obstacle.id = 111
-    obstacle.type = 5 # Line List
+    obstacle.type = 8 # Points
 
     obstacle.pose.orientation.w = 1.0
-    obstacle.scale.x = 0.3
+    obstacle.pose.position.x = 0.0
+    obstacle.pose.position.y = 0.0
+    obstacle.pose.position.z = 0.0
+
+    obstacle.scale.x = obstacle.scale.y = obstacle.scale.z = 0.5
+
     obstacle.color.r = 0.0
     obstacle.color.g = 0.0
     obstacle.color.b = 0.0

@@ -71,8 +71,8 @@ def generateObstacle(centre_point):
     height_grid = int(height*scale)
     width_grid = int(width*scale)
     centre_grid = []
-    centre_grid.append(int(centre_point[0]))
-    centre_grid.append(int(centre_point[1]))
+    centre_grid.append(int(centre_point[0]*scale))
+    centre_grid.append(int(centre_point[1]*scale))
     obstacle = []
     for i in range(max(0, centre_grid[0] - height_grid/2), min(height_of_map, centre_grid[0] + height_grid/2)):
         for j in range(max(0, centre_grid[1] - width_grid/2), min(width_of_map, centre_grid[1] + width_grid/2)):
@@ -167,6 +167,17 @@ def a_star_search(graph, start, goal):
 
     return came_from, cost_so_far
 
+def callback_obst(centre_point):
+    # rospy.logwarn(len(diagram.walls))
+    rospy.loginfo((centre_point.points[0].y, centre_point.points[0].x))
+    diagram.walls = list(set(diagram.walls +
+        generateObstacle((centre_point.points[0].y, centre_point.points[0].x))))
+def callback_pp(data):  # data contains the current and goal points
+    rospy.logwarn((data.points[1].x, data.points[1].y))
+    global start_point
+    global end_point
+    start_point = (int(data.points[0].y * scale), int(data.points[0].x * scale))
+    end_point   = (int(data.points[1].y * scale), int(data.points[1].x * scale))
 ##########################################################
 # Initialization
 scale = 10
@@ -176,52 +187,55 @@ width_of_map = int(6*scale)
 start_point = (int(0*scale), int(0*scale))
 # end_point = (int(0*scale), int(0*scale))
 end_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale))
-# centre_of_rectangle_obstacle = (int(random.uniform(0,3)*scale), int(random.uniform(0,6)*scale))
 
 diagram = GridWithWeights(width_of_map, height_of_map)
 diagram.walls = []
-# diagram.walls = generateObstacle(centre_of_rectangle_obstacle)
 
+rate = rospy.Rate(1)
 
-print 'end_point: ', end_point
-print
+# Loop for path planning
+while not rospy.is_shutdown():
+    print
+    print 'start_point: ', start_point
+    print
+    print 'end_point: ', end_point
+    rospy.init_node('astar_node', anonymous=True) # rosnode name
 
-rospy.init_node('markers_pub', anonymous=True) # rosnode name
-obstPub = rospy.Publisher('obst_markers', Marker, queue_size=10)
+    obstSub = rospy.Subscriber('obst_request', Marker, callback_obst)
+    ppSub = rospy.Subscriber('pp_request', Marker, callback_pp)
 
-boundary = visualization.setBoundary(height_of_map, width_of_map)
-obstacle = visualization.setObstacle(diagram.walls)
+    obstPub = rospy.Publisher('obst_markers', Marker, queue_size=10)
 
+    boundary = visualization.setBoundary(height_of_map, width_of_map)
+    obstacle = visualization.setObstacle(diagram.walls)
+    # print 'diagram.walls: \n', diagram.walls
 
-for point in diagram.walls:
-    if point == start_point or point == end_point:
-        print 'Starting point / destination conflicts with obstacle!'
-        break
-else:
-    # Plan the path
-    came_from, cost_so_far = a_star_search(diagram, start_point, end_point)
-    finalTrajectory = reconstruct_path(came_from, start=start_point, goal=end_point)
+    for point in diagram.walls:
+        if point == start_point or point == end_point:
+            print
+            print 'Starting point / destination conflicts with obstacle!'
+            break
+    else:
+        # Plan the path
+        came_from, cost_so_far = a_star_search(diagram, start_point, end_point)
+        finalTrajectory = reconstruct_path(came_from, start=start_point, goal=end_point)
 
-    # These four values are all visualization markers!
-    (sourcePoint, goalPoint, neighbourPoint,
-        finalPath) = visualization.setPathMarkers(finalTrajectory, came_from)
+        # These four values are all visualization markers!
+        (sourcePoint, goalPoint, neighbourPoint,
+            finalPath) = visualization.setPathMarkers(finalTrajectory, came_from)
 
-    rate = rospy.Rate(100)
-    pathPub = initialization.initPublishers()
-    while not rospy.is_shutdown():
+        pathPub = initialization.initPublishers()
         pathPub.publish(boundary)
         pathPub.publish(obstacle)
         pathPub.publish(sourcePoint)
         pathPub.publish(goalPoint)
         pathPub.publish(neighbourPoint)
         pathPub.publish(finalPath)
-        rate.sleep()
 
-    # rospy.spin()
+        draw_grid(diagram, width=1, point_to=came_from, start=start_point, goal=end_point)
+        # print()
+        # draw_grid(diagram, width=1, number=cost_so_far, start=start_point, goal=end_point)
+        # print()
+        # draw_grid(diagram, width=1, path=finalTrajectory)
 
-    print
-    draw_grid(diagram, width=1, point_to=came_from, start=start_point, goal=end_point)
-    # print()
-    # draw_grid(diagram, width=1, number=cost_so_far, start=start_point, goal=end_point)
-    # print()
-    # draw_grid(diagram, width=1, path=finalTrajectory)
+    rate.sleep()
