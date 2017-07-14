@@ -65,7 +65,7 @@ def initPathMarkers():
 
     sourcePoint.scale.x     = sourcePoint.scale.y       = sourcePoint.scale.z       = 1.0
     goalPoint.scale.x       = goalPoint.scale.y         = goalPoint.scale.z         = 1.0
-    neighbourPoint.scale.x  = neighbourPoint.scale.y    = neighbourPoint.scale.z    = 0.3
+    neighbourPoint.scale.x  = neighbourPoint.scale.y    = neighbourPoint.scale.z    = 0.1
     finalPath.scale.x       = 0.5 # scale.x controls the width of the line segments
 
     sourcePoint.color.g     = 1.0
@@ -79,7 +79,7 @@ def initPathMarkers():
 
     sourcePoint.color.a     = 1.0
     goalPoint.color.a       = 1.0
-    neighbourPoint.color.a  = 1.0
+    neighbourPoint.color.a  = 0.5
     finalPath.color.a       = 1.0
 
     return (sourcePoint, goalPoint, neighbourPoint, finalPath)
@@ -95,7 +95,8 @@ def initBoundMarker():
     boundary.type = 4 # Line Strip
 
     boundary.pose.orientation.w = 1.0
-    boundary.scale.x    = 1 # scale.x controls the width of the line segments
+    boundary.scale.x = 1 # scale.x controls the width of the line segments
+
     boundary.color.r = 0.0
     boundary.color.g = 0.0
     boundary.color.b = 0.0

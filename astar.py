@@ -25,32 +25,37 @@ class PriorityQueue:
 
 
 class SquareGrid(object):
-    def __init__(self, length, width):
+    def __init__(self, length, width, height):
         self.length = length
-        self.width = width
+        self.width  = width
+        self.height = height
         self.walls = []
 
     def in_bounds(self, id):
-        (x, y) = id
-        return 0 <= x < self.length and 0 <= y < self.width
+        (x, y, z) = id
+        return 0 <= x < self.length and 0 <= y < self.width and 0<= z<= self.height
 
     def passable(self, id):
         return id not in self.walls
 
     def neighbors(self, id):
-        (x, y) = id
+        (x, y, z) = id
         # results = [(x+1, y), (x, y-1), (x-1, y), (x, y+1)]
-        results = [(x+1, y), (x+1, y-1), (x, y-1), (x-1, y-1), (x-1, y),
-                    (x-1, y+1), (x, y+1), (x+1, y+1)]
-        if (x + y) % 2 == 0: results.reverse() # aesthetics [Attention!]
+        results = [(x+1, y, z), (x+1, y, z+1), (x, y, z+1), (x+1, y+1, z), (x+1, y+1, z+1),
+                    (x, y+1, z), (x, y+1, z+1), (x-1, y+1, z), (x-1, y+1, z+1),
+                    (x-1, y, z), (x-1, y, z+1), (x-1, y-1, z), (x-1, y-1, z+1),
+                    (x, y-1, z), (x, y-1, z+1), (x+1, y-1, z), (x+1, y-1, z+1),
+                    (x, y, z-1), (x+1, y, z-1), (x+1, y+1, z-1), (x, y+1, z-1), (x-1, y+1, z-1),
+                    (x-1, y, z-1), (x-1, y-1, z-1), (x, y-1, z-1), (x+1, y-1, z-1)]
+        # if (x + y) % 2 == 0: results.reverse() # aesthetics [Attention!]
         results = filter(self.in_bounds, results)
         results = filter(self.passable, results)
         return results
 
 
 class GridWithWeights(SquareGrid):
-    def __init__(self, length, width):
-        super(GridWithWeights, self).__init__(length, width)
+    def __init__(self, length, width, height):
+        super(GridWithWeights, self).__init__(length, width, height)
         self.weights = {}
 
     def cost(self, from_node, to_node):
@@ -60,61 +65,31 @@ class GridWithWeights(SquareGrid):
 def generateObstacle(centre_point):
     length  = random.uniform(0.5, 1)  # length of obstacle 1 ~ 2.5 metres
     width   = random.uniform(0.2, 0.3) # width of obstacle 1 ~ 2 metres
+    height  = random.uniform(0.2, 0.3) # height of obstacle 1 ~ 2 metres
     if random.uniform(0, 1) > 0.5:
         temp = length
         length = width
         width = temp
+    if random.uniform(0, 1) > 0.5:
+        temp = length
+        length = height
+        height = temp
     length_grid = int(length*scale)
     width_grid  = int(width*scale)
+    height_grid  = int(height*scale)
     centre_grid = []
     centre_grid.append(int(centre_point[0]*scale))
     centre_grid.append(int(centre_point[1]*scale))
+    centre_grid.append(int(centre_point[2]*scale))
     obstacle = []
-    for i in range(max(0, centre_grid[0] - length_grid/2), min(length_of_map, centre_grid[0] + length_grid/2)):
-        for j in range(max(0, centre_grid[1] - width_grid/2), min(width_of_map, centre_grid[1] + width_grid/2)):
-            obstacle.append((i,j))
+    for i in range(max(0, centre_grid[0] - length_grid/2),
+            min(length_of_map, centre_grid[0] + length_grid/2)):
+        for j in range(max(0, centre_grid[1] - width_grid/2),
+                min(width_of_map, centre_grid[1] + width_grid/2)):
+            for k in range(max(0, centre_grid[2] - height_grid/2),
+                    min(height_of_map, centre_grid[2] + height_grid/2)):
+                obstacle.append((i, j, k))
     return obstacle
-
-
-def draw_tile(graph, id, style, width):
-    # rospy.logfatal(id)
-    r = "."
-    if 'number' in style and id in style['number']: r = "%d" % style['number'][id]
-    if 'point_to' in style and style['point_to'].get(id, None) is not None:
-        (x1, y1) = id
-        (x2, y2) = style['point_to'][id]
-        if x2 == x1 + 1:
-            if y2 == y1 + 1:
-                r = u'\u2198'
-            elif y2 == y1 - 1:
-                r = u'\u2197'
-            else:
-                r = u"\u2192"
-        if x2 == x1 - 1:
-            if y2 == y1 + 1:
-                r = u'\u2199'
-            elif y2 == y1 - 1:
-                r = u'\u2196'
-            else:
-                r = u"\u2190"
-        if x2 == x1:
-            if y2 == y1 + 1:
-                r = u"\u2193"
-            else :
-                r = u"\u2191" # y2 == y1 - 1
-    if 'start' in style and id == style['start']: r = "A"
-    if 'goal' in style and id == style['goal']: r = "Z"
-    if 'path' in style and id in style['path']: r = "@"
-    if id in graph.walls: r = "#" * width
-    return r
-
-
-def draw_grid(graph, width=2, **style):
-    # print style
-    for y in range(graph.width):
-        for x in range(graph.length):
-            print("%%-%ds" % width % draw_tile(graph, (x, y), style, width)),
-        print()
 
 
 def reconstruct_path(came_from, start, goal):
@@ -137,9 +112,9 @@ def reconstruct_path(came_from, start, goal):
 
 
 def heuristic(a, b):
-    (x1, y1) = a
-    (x2, y2) = b
-    return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+    (x1, y1, z1) = a
+    (x2, y2, z2) = b
+    return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
 
 
 def a_star_search(graph, start, goal):
@@ -159,8 +134,11 @@ def a_star_search(graph, start, goal):
         # rospy.logfatal(goal)
 
         for next in graph.neighbors(current):
-            # if the neighbourPoint and the current are on a diagonal
-            if abs(next[0]-current[0]) + abs(next[1]-current[1]) == 2:
+            # if the neighbourPoint and the current are on a diagonal of cubic
+            if abs(next[0]-current[0]) + abs(next[1]-current[1]) + abs(next[2]-current[2]) == 3:
+                new_cost = cost_so_far[current] + math.sqrt(3)*graph.cost(current, next)
+            # if the neighbourPoint and the current are on a diagonal of square
+            elif abs(next[0]-current[0]) + abs(next[1]-current[1]) + abs(next[2]-current[2]) == 2:
                 new_cost = cost_so_far[current] + math.sqrt(2)*graph.cost(current, next)
             else:
                 new_cost = cost_so_far[current] + graph.cost(current, next)
@@ -176,18 +154,22 @@ def a_star_search(graph, start, goal):
 # [Problem!! multiple call!!]
 def callback_obst(centre_point):
     # rospy.logwarn(len(diagram.walls))
-    rospy.loginfo((centre_point.points[0].x, centre_point.points[0].y))
+    rospy.loginfo((centre_point.points[0].x, centre_point.points[0].y,
+                    centre_point.points[0].z))
     diagram.walls = list(set(diagram.walls +
-        generateObstacle((centre_point.points[0].x, centre_point.points[0].y))))
+        generateObstacle((centre_point.points[0].x, centre_point.points[0].y,
+                            centre_point.points[0].z))))
     callback_obst_flg = True
 
 
 def callback_pp(data):  # data contains the current and target points
-    rospy.logwarn((data.points[1].x, data.points[1].y))
+    rospy.logwarn((data.points[1].x, data.points[1].y, data.points[1].z))
     global current_point
     global target_point
-    current_point = (int(data.points[0].x * scale), int(data.points[0].y * scale))
-    target_point   = (int(data.points[1].x * scale), int(data.points[1].y * scale))
+    current_point = (int(data.points[0].x * scale), int(data.points[0].y * scale),
+                        int(data.points[0].z * scale))
+    target_point   = (int(data.points[1].x * scale), int(data.points[1].y * scale),
+                        int(data.points[1].z * scale))
     callback_pp_flg = True
 
 
@@ -199,16 +181,13 @@ scale = 10
 
 length_of_map = int(6*scale)
 width_of_map = int(3*scale)
-current_point = (int(0*scale), int(0*scale))
+height_of_map = int(3*scale)
+current_point = (int(0*scale), int(0*scale), int(0*scale))
 # target_point = (29, 19)
-target_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale))
+target_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale), int(random.uniform(2,3)*scale))
 
-diagram = GridWithWeights(length_of_map, width_of_map)
+diagram = GridWithWeights(length_of_map, width_of_map, height_of_map)
 diagram.walls = []
-# diagram.walls = [(27,18), (27,19), (27,20), (27,21), (27,22), (27,23),
-#                     (28,18), (28,19), (28,20), (28,21), (28,22), (28,23),
-#                     (29,15), (30,15), (31,15), (32,15), (33,15), (34,15),
-#                     (29,16), (30,16), (31,16), (32,16), (33,16), (34,16)]
 
 callback_obst_flg = True
 callback_pp_flg = True
@@ -222,7 +201,7 @@ while not rospy.is_shutdown():
     print
     print 'end_point: ', end_point
     rospy.init_node('astar_node', anonymous=True) # rosnode name
-    rate = rospy.Rate(1)
+    rate = rospy.Rate(10)
 
     while callback_obst_flg:
         obstSub = rospy.Subscriber('obst_request', Marker, callback_obst)
@@ -233,7 +212,7 @@ while not rospy.is_shutdown():
 
     obstPub = rospy.Publisher('obst_markers', Marker, queue_size=10)
 
-    boundary = visualization.setBoundary(length_of_map, width_of_map)
+    boundary = visualization.setBoundary(length_of_map, width_of_map, height_of_map)
     obstacle = visualization.setObstacle(diagram.walls)
     # print 'diagram.walls: \n', diagram.walls
 
@@ -241,7 +220,8 @@ while not rospy.is_shutdown():
         if point == start_point or point == end_point:
             print
             print 'Starting point / destination conflicts with obstacle!'
-            target_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale))
+            target_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale),
+                                int(random.uniform(2,3)*scale))
             break
 
     else:
@@ -263,7 +243,7 @@ while not rospy.is_shutdown():
         pathPub.publish(neighbourPoint)
         pathPub.publish(finalPath)
 
-        draw_grid(diagram, width=1, point_to=came_from, start=start_point, goal=end_point)
+        # draw_grid(diagram, width=1, point_to=came_from, start=start_point, goal=end_point)
         # print()
         # draw_grid(diagram, width=1, number=cost_so_far, start=start_point, goal=end_point)
         # print()

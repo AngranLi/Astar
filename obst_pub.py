@@ -49,7 +49,7 @@ class obst_pub():
         centre_point = Point()
         centre_point.x = 1.0
         centre_point.y = 1.0
-        centre_point.z = 0.0
+        centre_point.z = 1.0
 
         self.obst_request.points.append(centre_point)
 
@@ -73,7 +73,7 @@ class obst_pub():
                 centre_point = Point()
                 centre_point.x = random.uniform(1, 6)
                 centre_point.y = random.uniform(1, 3)
-                centre_point.z = 1.0
+                centre_point.z = random.uniform(1, 3)
 
 		# self.obst_request.text = "update 1"
 
