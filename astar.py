@@ -54,7 +54,7 @@ class GridWithWeights(SquareGrid):
         self.weights = {}
 
     def cost(self, from_node, to_node):
-        return self.weights.get(to_node, 1) # ???
+        return self.weights.get(to_node, 1) # default is 1
 
 
 def generateObstacle(centre_point):
@@ -159,7 +159,11 @@ def a_star_search(graph, start, goal):
         # rospy.logfatal(goal)
 
         for next in graph.neighbors(current):
-            new_cost = cost_so_far[current] + graph.cost(current, next)
+            # if the neighbourPoint and the current are on a diagonal
+            if abs(next[0]-current[0]) + abs(next[1]-current[1]) == 2:
+                new_cost = cost_so_far[current] + math.sqrt(2)*graph.cost(current, next)
+            else:
+                new_cost = cost_so_far[current] + graph.cost(current, next)
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
                 priority = new_cost + heuristic(goal, next)
@@ -188,6 +192,7 @@ def callback_pp(data):  # data contains the current and target points
 
 
 ##########################################################
+# try:
 
 # Initialization
 scale = 10
@@ -195,11 +200,15 @@ scale = 10
 length_of_map = int(6*scale)
 width_of_map = int(3*scale)
 current_point = (int(0*scale), int(0*scale))
-# target_point = (int(0*scale), int(0*scale))
+# target_point = (29, 19)
 target_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale))
 
 diagram = GridWithWeights(length_of_map, width_of_map)
 diagram.walls = []
+# diagram.walls = [(27,18), (27,19), (27,20), (27,21), (27,22), (27,23),
+#                     (28,18), (28,19), (28,20), (28,21), (28,22), (28,23),
+#                     (29,15), (30,15), (31,15), (32,15), (33,15), (34,15),
+#                     (29,16), (30,16), (31,16), (32,16), (33,16), (34,16)]
 
 callback_obst_flg = True
 callback_pp_flg = True
@@ -213,7 +222,7 @@ while not rospy.is_shutdown():
     print
     print 'end_point: ', end_point
     rospy.init_node('astar_node', anonymous=True) # rosnode name
-    rate = rospy.Rate(100)
+    rate = rospy.Rate(1)
 
     while callback_obst_flg:
         obstSub = rospy.Subscriber('obst_request', Marker, callback_obst)
@@ -261,3 +270,11 @@ while not rospy.is_shutdown():
         # draw_grid(diagram, width=1, path=finalTrajectory)
 
     rate.sleep()
+
+# except KeyboardInterrupt:
+#     rospy.logfatal('ahahah')
+#     print 'goalpoint: ', goal
+#     print
+#     print 'walls: \n', diagram.walls
+#     print
+#     sys.exit()
