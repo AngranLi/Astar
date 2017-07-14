@@ -4,22 +4,11 @@ import heapq
 import random
 import initialization
 import visualization
+import math
 from geometry_msgs.msg import PointStamped, Point
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 
-# class Queue:
-#     def __init__(self):
-#         self.elements = collections.deque()
-#
-#     def empty(self):
-#         return len(self.elements) == 0
-#
-#     def put(self, x):
-#         self.elements.append(x)
-#
-#     def get(self):
-#         return self.elements.popleft()
 
 class PriorityQueue:
     def __init__(self):
@@ -150,7 +139,7 @@ def reconstruct_path(came_from, start, goal):
 def heuristic(a, b):
     (x1, y1) = a
     (x2, y2) = b
-    return abs(x1 - x2) + abs(y1 - y2)
+    return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
 
 def a_star_search(graph, start, goal):
@@ -243,7 +232,7 @@ while not rospy.is_shutdown():
         if point == start_point or point == end_point:
             print
             print 'Starting point / destination conflicts with obstacle!'
-            end_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale))
+            target_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale))
             break
 
     else:
