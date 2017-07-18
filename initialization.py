@@ -131,6 +131,7 @@ def initObstMarker():
 
 
 def initPublishers():
-    pathPub = rospy.Publisher('pp_markers', Marker, queue_size=10) # rostopic name
+    pathPub = rospy.Publisher('path_planner_rrt', Marker, queue_size=10) # rostopic name
     obstPub = rospy.Publisher('obst_markers', Marker, queue_size=10)
-    return (pathPub, obstPub)
+    pointsPub = rospy.Publisher('obst_markers', Marker, queue_size=10)
+    return (pathPub, obstPub, pointsPub)
