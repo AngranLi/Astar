@@ -63,17 +63,17 @@ class GridWithWeights(SquareGrid):
 
 
 def generateObstacle(centre_point):
-    length  = random.uniform(0.5, 1)  # length of obstacle 1 ~ 2.5 metres
-    width   = random.uniform(0.2, 0.3) # width of obstacle 1 ~ 2 metres
-    height  = random.uniform(0.2, 0.3) # height of obstacle 1 ~ 2 metres
-    if random.uniform(0, 1) > 0.5:
-        temp = length
-        length = width
-        width = temp
-    if random.uniform(0, 1) > 0.5:
-        temp = length
-        length = height
-        height = temp
+    length  = 0.5 #random.uniform(0.5, 1)  # length of obstacle 0.5 ~ 1.0 metres
+    width   = 0.5 #random.uniform(0.2, 0.3) # width of obstacle 0.2 ~ 0.3 metres
+    height  = 0.5 #random.uniform(0.2, 0.3) # height of obstacle 0.2 ~ 0.3 metres
+    # if random.uniform(0, 1) > 0.5:
+    #     temp = length
+    #     length = width
+    #     width = temp
+    # if random.uniform(0, 1) > 0.5:
+    #     temp = length
+    #     length = height
+    #     height = temp
     length_grid = int(length*scale)
     width_grid  = int(width*scale)
     height_grid  = int(height*scale)
@@ -151,15 +151,14 @@ def a_star_search(graph, start, goal):
     return came_from, cost_so_far
 
 
-# [Problem!! multiple call!!]
-def callback_obst(centre_point):
-    # rospy.logwarn(len(diagram.walls))
-    rospy.loginfo((centre_point.points[0].x, centre_point.points[0].y,
-                    centre_point.points[0].z))
-    diagram.walls = list(set(diagram.walls +
-        generateObstacle((centre_point.points[0].x, centre_point.points[0].y,
-                            centre_point.points[0].z))))
-    callback_obst_flg = True
+# def callback_obst(centre_point):
+#     # rospy.logwarn(len(diagram.walls))
+#     rospy.loginfo((centre_point.points[0].x, centre_point.points[0].y,
+#                     centre_point.points[0].z))
+#     diagram.walls = list(set(diagram.walls +
+#         generateObstacle((centre_point.points[0].x, centre_point.points[0].y,
+#                             centre_point.points[0].z))))
+#     callback_obst_flg = True
 
 
 def callback_pp(data):  # data contains the current and target points
@@ -179,17 +178,18 @@ def callback_pp(data):  # data contains the current and target points
 # Initialization
 scale = 10
 
-length_of_map = int(6*scale)
+length_of_map = int(3*scale)
 width_of_map = int(3*scale)
 height_of_map = int(3*scale)
 current_point = (int(0*scale), int(0*scale), int(0*scale))
 # target_point = (29, 19)
-target_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale), int(random.uniform(2,3)*scale))
+target_point = (int(random.uniform(2,3)*scale), int(random.uniform(2,3)*scale), int(random.uniform(2,3)*scale))
 
 diagram = GridWithWeights(length_of_map, width_of_map, height_of_map)
-diagram.walls = []
+# diagram.walls = []
+diagram.walls = generateObstacle((1.5, 1.5, 1.5))
 
-callback_obst_flg = True
+callback_obst_flg = False #True
 callback_pp_flg = True
 
 # Loop for path planning
@@ -203,29 +203,31 @@ while not rospy.is_shutdown():
     rospy.init_node('astar_node', anonymous=True) # rosnode name
     rate = rospy.Rate(10)
 
-    while callback_obst_flg:
-        obstSub = rospy.Subscriber('obst_request', Marker, callback_obst)
-        callback_obst_flg = False
+    # while callback_obst_flg:
+    #     obstSub = rospy.Subscriber('obst_request', Marker, callback_obst)
+    #     callback_obst_flg = False
     while callback_pp_flg:
         ppSub   = rospy.Subscriber('pp_request', Marker, callback_pp)
         callback_pp_flg = False
-
-    obstPub = rospy.Publisher('obst_markers', Marker, queue_size=10)
 
     boundary = visualization.setBoundary(length_of_map, width_of_map, height_of_map)
     obstacle = visualization.setObstacle(diagram.walls)
     # print 'diagram.walls: \n', diagram.walls
 
+    (pathPub, obstPub) = initialization.initPublishers()
+
     for point in diagram.walls:
         if point == start_point or point == end_point:
             print
             print 'Starting point / destination conflicts with obstacle!'
-            target_point = (int(random.uniform(4,6)*scale), int(random.uniform(2,3)*scale),
+            target_point = (int(random.uniform(2,3)*scale), int(random.uniform(2,3)*scale),
                                 int(random.uniform(2,3)*scale))
             break
 
     else:
         # Plan the path
+        print
+        print 'Planning path...'
         came_from, cost_so_far = a_star_search(diagram, start_point, end_point)
         finalTrajectory = reconstruct_path(came_from, start=start_point, goal=end_point)
 
@@ -234,20 +236,15 @@ while not rospy.is_shutdown():
         (sourcePoint, goalPoint, neighbourPoint,
             finalPath) = visualization.setPathMarkers(finalTrajectory, came_from)
 
-        pathPub = initialization.initPublishers()
-
-        pathPub.publish(boundary)
-        pathPub.publish(obstacle)
+        # (pathPub, obstPub) = initialization.initPublishers()
+        # print
+        # print 'Publishing Markers'
+        obstPub.publish(boundary)
+        obstPub.publish(obstacle)
         pathPub.publish(sourcePoint)
         pathPub.publish(goalPoint)
         pathPub.publish(neighbourPoint)
         pathPub.publish(finalPath)
-
-        # draw_grid(diagram, width=1, point_to=came_from, start=start_point, goal=end_point)
-        # print()
-        # draw_grid(diagram, width=1, number=cost_so_far, start=start_point, goal=end_point)
-        # print()
-        # draw_grid(diagram, width=1, path=finalTrajectory)
 
     rate.sleep()
 

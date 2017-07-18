@@ -57,7 +57,7 @@ class obst_pub():
 
         #a counter so the location changes
 
-        self.counterMax = 1; # waiting time = counterMax*rospy.Rate
+        self.counterMax = 10; # waiting time = counterMax*rospy.Rate
         self.counter = self.counterMax;
 
         while not rospy.is_shutdown():
@@ -71,7 +71,7 @@ class obst_pub():
                 self.counter = 0
 
                 centre_point = Point()
-                centre_point.x = random.uniform(1, 6)
+                centre_point.x = random.uniform(1, 3)
                 centre_point.y = random.uniform(1, 3)
                 centre_point.z = random.uniform(1, 3)
 
