@@ -63,17 +63,17 @@ class GridWithWeights(SquareGrid):
 
 
 def generateObstacle(centre_point):
-    length  = 1 #random.uniform(0.5, 1)  # length of obstacle 0.5 ~ 1.0 metres
-    width   = 1 #random.uniform(0.2, 0.3) # width of obstacle 0.2 ~ 0.3 metres
-    height  = 1.5 #random.uniform(0.2, 0.3) # height of obstacle 0.2 ~ 0.3 metres
-    # if random.uniform(0, 1) > 0.5:
-    #     temp = length
-    #     length = width
-    #     width = temp
-    # if random.uniform(0, 1) > 0.5:
-    #     temp = length
-    #     length = height
-    #     height = temp
+    length  = random.uniform(0.5, 1)  # length of obstacle 0.5 ~ 1.0 metres
+    width   = random.uniform(0.2, 0.3) # width of obstacle 0.2 ~ 0.3 metres
+    height  = random.uniform(0.2, 0.3) # height of obstacle 0.2 ~ 0.3 metres
+    if random.uniform(0, 1) > 0.5:
+        temp = length
+        length = width
+        width = temp
+    if random.uniform(0, 1) > 0.5:
+        temp = length
+        length = height
+        height = temp
     length_grid = int(length*scale)
     width_grid  = int(width*scale)
     height_grid  = int(height*scale)
@@ -157,11 +157,9 @@ def callback_obst(centre_point):
     # rospy.logwarn(len(diagram.walls))
     # rospy.logwarn((centre_point.pose.position.x, centre_point.pose.position.y,
     #                 centre_point.pose.position.z))
-    diagram.walls = generateObstacle((centre_point.pose.position.x, centre_point.pose.position.y,
-                        centre_point.pose.position.z))
-        # list(set(diagram.walls +
-        #generateObstacle((centre_point.points[0].x, centre_point.points[0].y,
-                            # centre_point.points[0].z))))
+    diagram.walls = list(set(diagram.walls +
+                        generateObstacle((centre_point.pose.position.x,
+                        centre_point.pose.position.y, centre_point.pose.position.z))))
     callback_obst_flg = True
 
 
@@ -172,29 +170,26 @@ def callback_start(data):  # data contains the current point
                         int(data.pose.position.z* scale))
     callback_start_flg = True
 
-    #ramdom point
-    target_point = (int(random.uniform(1,3)*scale), int(random.uniform(1,3)*scale), int(random.uniform(1,2)*scale))
 
 def callback_end(data):  # data contains the target point
     # rospy.loginfo((data.points[1].x, data.points[1].y, data.points[1].z))
     global target_point
-    target_point = (int(data.points[1].x * scale), int(data.points[1].y * scale),
-                        int(data.points[1].z * scale))
+    target_point = (int(data.pose.position.x * scale), int(data.pose.position.y * scale),
+                        int(data.pose.position.z* scale))
     callback_end_flg = True
 
 
-##########################################################
+###############################################################################
 # try:
 
 # Initialization
-scale = 5
+scale = 10
 
 length_of_map = int(5*scale)
 width_of_map = int(5*scale)
 height_of_map = int(5*scale)
 current_point = (int(0*scale), int(0*scale), int(0*scale))
-# target_point = (29, 19)
-target_point = (int(random.uniform(1,3)*scale), int(random.uniform(1,3)*scale), int(random.uniform(1,2)*scale))
+target_point = (int(random.uniform(2,3)*scale), int(random.uniform(2,3)*scale), int(random.uniform(1,2)*scale))
 
 diagram = GridWithWeights(length_of_map, width_of_map, height_of_map)
 diagram.walls = []
@@ -206,7 +201,7 @@ callback_end_flg = True
 
 # Loop for path planning
 while not rospy.is_shutdown():
-    rospy.sleep(5.)
+    rospy.sleep(1.)
     start_point = current_point
     end_point   = target_point
     print
@@ -216,19 +211,21 @@ while not rospy.is_shutdown():
     rospy.init_node('astar_node', anonymous=True) # rosnode name
     # rate = rospy.Rate(1)
 
+    # receive obstacle postion
     while callback_obst_flg:
-        obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst)
+        obstSub = rospy.Subscriber('obst_request', PoseStamped, callback_obst)
         callback_obst_flg = False
-    while callback_start_flg:
-        ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_start)
-        callback_start_flg = False
+    # receive current position of UAV
+    # while callback_start_flg:
+    #     ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_start)
+    #     callback_start_flg = False
+    # receive requested destination
     while callback_end_flg:
-        ppSub   = rospy.Subscriber('pp_request', Marker, callback_end)
+        ppSub   = rospy.Subscriber('end_request', PoseStamped, callback_end)
         callback_end_flg = False
 
     boundary = visualization.setBoundary(length_of_map, width_of_map, height_of_map)
     obstacle = visualization.setObstacle(diagram.walls)
-    # print 'diagram.walls: \n', diagram.walls
 
     (pathPub, obstPub, pointsPub) = initialization.initPublishers()
 
@@ -249,14 +246,11 @@ while not rospy.is_shutdown():
         came_from, cost_so_far = a_star_search(diagram, start_point, end_point)
         finalTrajectory = reconstruct_path(came_from, start=start_point, goal=end_point)
 
-
         # These four values are all visualization markers!
         (sourcePoint, goalPoint, neighbourPoint,
             finalPath) = visualization.setPathMarkers(finalTrajectory, came_from)
         finalPath.text = '0'
 
-        # print
-        # print 'Publishing Markers'
         obstPub.publish(boundary)
         obstPub.publish(obstacle)
         pointsPub.publish(sourcePoint)
