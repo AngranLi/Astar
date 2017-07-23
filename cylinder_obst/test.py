@@ -1,6 +1,4 @@
-
-
-
+import timeit
 # length_of_map = 10
 # width_of_map  = 10
 # height_of_map = 5
@@ -48,9 +46,15 @@
 # for point in lst:
 #     print point
 
-dct = {(2, 2, 2): (4, 4, 4), (3, 3, 3): (5, 5, 5)}
-f = open('test.txt', 'w')
-for key in dct:
-    string = str(key) + ':' + str(dct[key]) + '  '
-    f.write(string)
-f.close()
+
+# dct = {(2, 2, 2): (4, 4, 4), (3, 3, 3): (5, 5, 5)}
+# f = open('test.txt', 'w')
+# for key in dct:
+#     string = str(key) + ':' + str(dct[key]) + '  '
+#     f.write(string)
+# f.close()
+
+
+a = (1, 2, 3)
+b = (4, 5, 6)
+print timeit.timeit('(4-1)**2 + (5-2)**2', number = 100000)
