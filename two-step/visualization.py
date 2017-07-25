@@ -146,3 +146,34 @@ def setObstacle(obstArray):
         i += 1
         obstMarkerArray.markers.append(obstMarker)
     return obstMarkerArray
+
+def setRoughMarkers(roughTrajectory, scaleRatio):
+    (orig_point, destination, roughPath) = init.initRoughMarkers()
+
+    tempPoint = Point()
+    tempPoint.x = roughTrajectory[0][0] *scaleRatio
+    tempPoint.y = roughTrajectory[0][1] *scaleRatio
+    tempPoint.z = roughTrajectory[0][2] *scaleRatio
+    orig_point.points.append(tempPoint)
+    orig_point.pose.position.x = roughTrajectory[0][0] *scaleRatio
+    orig_point.pose.position.y = roughTrajectory[0][1] *scaleRatio
+    orig_point.pose.position.z = roughTrajectory[0][2] *scaleRatio
+
+    tempPoint = Point()
+    tempPoint.x = roughTrajectory[len(roughTrajectory)-1][0] *scaleRatio
+    tempPoint.y = roughTrajectory[len(roughTrajectory)-1][1] *scaleRatio
+    tempPoint.z = roughTrajectory[len(roughTrajectory)-1][2] *scaleRatio
+    destination.points.append(tempPoint)
+    destination.pose.position.x = roughTrajectory[len(roughTrajectory)-1][0] *scaleRatio
+    destination.pose.position.y = roughTrajectory[len(roughTrajectory)-1][1] *scaleRatio
+    destination.pose.position.z = roughTrajectory[len(roughTrajectory)-1][2] *scaleRatio
+
+
+    for item in roughTrajectory:
+        tempPoint = Point()
+        tempPoint.x = item[0] *scaleRatio
+        tempPoint.y = item[1] *scaleRatio
+        tempPoint.z = item[2] *scaleRatio
+        roughPath.points.append(tempPoint)
+
+    return (orig_point, destination, roughPath)

@@ -22,14 +22,14 @@ class obst_pub():
         self.obst_request.header.frame_id = "path_planner"
         self.obst_request.header.stamp    = rospy.get_rostime()
 
-        self.obst_request.pose.position.x = 0.0
-        self.obst_request.pose.position.y = 0.0
-        self.obst_request.pose.position.z = 0.0
+        self.obst_request.pose.position.x = 2.0
+        self.obst_request.pose.position.y = 2.0
+        self.obst_request.pose.position.z = 1.0
         self.obst_request.pose.orientation.w = 1.0
 
         #a counter so the location changes
 
-        self.counterMax = 10; # waiting time = counterMax*rospy.Rate
+        self.counterMax = 2; # waiting time = counterMax*rospy.Rate
         self.counter = self.counterMax;
 
         while not rospy.is_shutdown():
@@ -42,9 +42,9 @@ class obst_pub():
 
                 self.counter = 0
 
-                self.obst_request.pose.position.x = random.uniform(0,4)
-                self.obst_request.pose.position.y = random.uniform(0,4)
-                self.obst_request.pose.position.z = random.uniform(0,1.5)
+                self.obst_request.pose.position.x = random.uniform(1.5, 3.5)
+                self.obst_request.pose.position.y = random.uniform(1.5, 3.5)
+                self.obst_request.pose.position.z = random.uniform(2, 2.5)
 
             rate.sleep()
 

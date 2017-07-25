@@ -22,14 +22,14 @@ class start_pub():
         self.current_point.header.frame_id = "path_planner"
         self.current_point.header.stamp    = rospy.get_rostime()
 
-        self.current_point.pose.position.x = 0.0
-        self.current_point.pose.position.y = 0.0
-        self.current_point.pose.position.z = 0.0
+        self.current_point.pose.position.x = 0.5
+        self.current_point.pose.position.y = 0.5
+        self.current_point.pose.position.z = 0.5
         self.current_point.pose.orientation.w = 1.0
 
         #a counter so the location changes
 
-        self.counterMax = 10; # waiting time = counterMax*rospy.Rate
+        self.counterMax = 2; # waiting time = counterMax*rospy.Rate
         self.counter = self.counterMax;
 
         while not rospy.is_shutdown():
@@ -42,9 +42,9 @@ class start_pub():
 
                 self.counter = 0
 
-                self.current_point.pose.position.x = 0.0
-                self.current_point.pose.position.y = 0.0
-                self.current_point.pose.position.z = 0.0
+                self.current_point.pose.position.x += 0.1 +random.uniform(-0.01, 0.01)
+                self.current_point.pose.position.y += 0.1 +random.uniform(-0.01, 0.01)
+                self.current_point.pose.position.z += 0.075 +random.uniform(-0.01, 0.01)
                 self.current_point.pose.orientation.w = 1.0
 
             rate.sleep()

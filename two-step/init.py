@@ -4,8 +4,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 
 
 def initPathMarkers():
-
-    # cannot write in one equation!!!
+    # cannot written in one equation!!!
     sourcePoint     = Marker()
     goalPoint       = Marker()
     neighbourPoint  = Marker()
@@ -69,7 +68,9 @@ def initPathMarkers():
     finalPath.scale.x       = 0.5 # scale.x controls the width of the line segments
 
     sourcePoint.color.g     = 1.0
+    sourcePoint.color.b     = 1.0
     goalPoint.color.r       = 1.0
+    goalPoint.color.b       = 1.0
     neighbourPoint.color.r  = 0.8
     neighbourPoint.color.g  = 0.4
 
@@ -131,11 +132,12 @@ def initObstMarker():
 
 
 def initPublishers():
-    pathPub = rospy.Publisher('path_planner_rrt', Marker, queue_size=10) # rostopic name
-    pointsPub = rospy.Publisher('points_markers', Marker, queue_size=10)
-    boundPub = rospy.Publisher('bound_markers', Marker, queue_size=10)
-    obstPub = rospy.Publisher('obstMarkers_array', MarkerArray, queue_size=10)
-    return (pathPub, pointsPub, boundPub, obstPub)
+    pathPub     = rospy.Publisher('path_planner_rrt', Marker, queue_size=10) # rostopic name
+    pointsPub   = rospy.Publisher('points_markers', Marker, queue_size=10)
+    boundPub    = rospy.Publisher('bound_markers', Marker, queue_size=10)
+    obstPub     = rospy.Publisher('obstMarkers_array', MarkerArray, queue_size=10)
+    roughPub    = rospy.Publisher('roughPath_markers', Marker, queue_size=10)
+    return (pathPub, pointsPub, boundPub, obstPub, roughPub)
 
 def gridalize(value, scale):
     if isinstance(value, tuple):
@@ -146,3 +148,60 @@ def gridalize(value, scale):
         return tuple(result)
     else:
         return int(round(value *scale))
+
+def initRoughMarkers():
+    orig_point  = Marker()
+    destination = Marker()
+    roughPath   = Marker()
+
+    orig_point.header.frame_id  = 'path_planner'
+    destination.header.frame_id = 'path_planner'
+    roughPath.header.frame_id   = 'path_planner'
+
+    orig_point.header.stamp     = rospy.get_rostime()
+    destination.header.stamp    = rospy.get_rostime()
+    roughPath.header.stamp      = rospy.get_rostime()
+
+    orig_point.ns   = "path_planner"
+    destination.ns  = "path_planner"
+    roughPath.ns    = "path_planner"
+
+    orig_point.action   = 0     # add/modify an object
+    destination.action  = 0
+    roughPath.action    = 0
+
+    orig_point.id   = 20
+    destination.id  = 21
+    roughPath.id    = 22
+
+    orig_point.type     = 2 # Sphere
+    destination.type    = 2
+    roughPath.type      = 4 # Line Strip
+
+    orig_point.pose.orientation.w   = 1.0
+    destination.pose.orientation.w  = 1.0
+    roughPath.pose.orientation.w    = 1.0
+
+    orig_point.pose.position.x = 0.0
+    orig_point.pose.position.y = 0.0
+    orig_point.pose.position.z = 0.0
+
+    destination.pose.position.x = 10.0
+    destination.pose.position.y = 10.0
+    destination.pose.position.z = 0.0
+
+    orig_point.scale.x  = orig_point.scale.y    = orig_point.scale.z    = 3.0
+    destination.scale.x = destination.scale.y   = destination.scale.z   = 3.0
+    roughPath.scale.x   = 0.5 # scale.x controls the width of the line segments
+
+    orig_point.color.g  = 1.0
+    destination.color.r = 1.0
+
+    roughPath.color.g = 1.0
+    roughPath.color.b = 1.0
+
+    orig_point.color.a  = 1.0
+    destination.color.a = 1.0
+    roughPath.color.a   = 0.5
+
+    return (orig_point, destination, roughPath)

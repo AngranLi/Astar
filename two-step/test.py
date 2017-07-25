@@ -59,9 +59,12 @@ import timeit
 # b = (4, 5, 6)
 # print timeit.timeit('(4-1)**2 + (5-2)**2', number = 100000)
 
-def divideNumbers(num1, num2):
-    return num1 % num2 == 0
+# def divideNumbers(num1, num2):
+#     return num1 % num2 == 0
+#
+# lst = range(10)
+# print 'lst: ', lst
+# print filter(lambda x: divideNumbers(x, 2), lst)
 
-lst = range(10)
-print 'lst: ', lst
-print filter(lambda x: divideNumbers(x, 2), lst)
+dictionary = {(1,1): (1,2), (1,3): (1,2)}
+print len(dictionary)
