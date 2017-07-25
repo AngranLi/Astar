@@ -20,7 +20,7 @@ def setPathMarkers(finalTrajectory, came_from):
         neighbourPoint.points.append(tempPoint)
 
     # finalPath
-    for i in range(len(finalTrajectory)):
+    for i in range(3, len(finalTrajectory)):
         tempPoint = Point()
         tempPoint.x = finalTrajectory[i][0]
         tempPoint.y = finalTrajectory[i][1]
