@@ -76,6 +76,8 @@ class Obstacle():
         self.width  = 0
         self.height = 0
         self.text = text
+        # for visualization
+        self.points = []
 
     def setSize(self, size):
         self.length = size[0]
@@ -103,14 +105,13 @@ class Obstacle():
                 self.range.update({(i,j): [self.bottom,self.top]})
 
         # for visualization
-        self.points = []
-        for i in range(self.left, self.right+1):
-            for j in range(self.back, self.front+1):
-                for k in range(self.bottom, self.top+1):
-                    self.points.append((i, j, k))
-        # for key in self.range:
-        #     self.points.append((key[0], key[1], self.range[key][0]))
-        #     self.points.append((key[0], key[1], self.range[key][1]))
+        # for i in range(self.left, self.right+1):
+        #     for j in range(self.back, self.front+1):
+        #         for k in range(self.bottom, self.top+1):
+        #             self.points.append((i, j, k))
+        for key in self.range:
+            self.points.append((key[0], key[1], self.range[key][0]))
+            self.points.append((key[0], key[1], self.range[key][1]))
 
     def conflict(self, point):
         # if in the vertical range
@@ -189,24 +190,24 @@ def a_star_search(graph, start, goal):
     return came_from, cost_so_far
 
 
-# def callback_obst(centre_point):
-#     # rospy.logwarn(len(diagram.walls))
-#     # rospy.logwarn((centre_point.pose.position.x, centre_point.pose.position.y,
-#     #                 centre_point.pose.position.z))
-#     diagram.walls = list(set(diagram.walls +
-#                         makeObstacle((centre_point.pose.position.x,
-#                         centre_point.pose.position.y, centre_point.pose.position.z))))
-#     callback_obst_flg = True
+def callback_obst(centre_point):
+    # rospy.logwarn(len(diagram.walls))
+    # rospy.logwarn((centre_point.pose.position.x, centre_point.pose.position.y,
+    #                 centre_point.pose.position.z))
+    global obst_UGV1
+    obst_UGV1 = Obstacle(init.gridalize((centre_point.pose.position.x, centre_point.pose.position.y, centre_point.pose.position.z), scale), 'obst_UGV')
+    obst_UGV1.setSize(init.gridalize((1, 1, 2), scale))
+    callback_obst_flg = True
 
 
-# def callback_start(data):  # data contains the current point
-#     # rospy.loginfo((data.pose.position.x, data.pose.position.y, data.pose.position.z))
-#     global current_point
-#     current_point = (int(data.pose.position.x * scale), int(data.pose.position.y * scale),
-#                         int(data.pose.position.z* scale))
-#     callback_start_flg = True
-#
-#
+def callback_start(data):  # data contains the current point
+    # rospy.loginfo((data.pose.position.x, data.pose.position.y, data.pose.position.z))
+    global current_point
+    current_point = (int(data.pose.position.x * scale), int(data.pose.position.y * scale),
+                        int(data.pose.position.z* scale))
+    callback_start_flg = True
+
+
 # def callback_end(data):  # data contains the target point
 #     # rospy.loginfo((data.points[1].x, data.points[1].y, data.points[1].z))
 #     global target_point
@@ -231,20 +232,20 @@ rospy.init_node('astar_node', anonymous=True) # rosnode name
 rospy.sleep(0.3) # it takes time to initialize publishers
 rate = rospy.Rate(1) # loop runs at x Hertz
 
-(length_of_map, width_of_map, height_of_map) = init.gridalize((5, 5, 3), scale)
-current_point   = tuple(init.gridalize((0, 0, 0), scale))
-target_point    = tuple(init.gridalize((5, 5, 3), scale))
+(length_of_map, width_of_map, height_of_map) = init.gridalize((4, 4, 2.5), scale)
+current_point   = tuple(init.gridalize((0.5, 0.5, 1), scale))
+target_point    = tuple(init.gridalize((3, 3, 1.5), scale))
 
 diagram = GridWithWeights(length_of_map, width_of_map, height_of_map)
-diagram.walls = []
+# diagram.walls = []
 
 # initialize obstacles with position of their centre point
-obst_UAV1 = Obstacle(init.gridalize((0.5, 2.5, 1), scale), 'obst_UAV')
-obst_UAV2 = Obstacle(init.gridalize((1.5, 0.5, 1.5), scale), 'obst_UAV')
-obst_UAV3 = Obstacle(init.gridalize((3.5, 4.5, 2), scale), 'obst_UAV')
+# obst_UAV1 = Obstacle(init.gridalize((0.5, 2.5, 1), scale), 'obst_UAV')
+# obst_UAV2 = Obstacle(init.gridalize((1.5, 0.5, 1.5), scale), 'obst_UAV')
+# obst_UAV3 = Obstacle(init.gridalize((3.5, 4.5, 2), scale), 'obst_UAV')
 obst_UGV1 = Obstacle(init.gridalize((1.5, 4.5, 2), scale), 'obst_UGV')
-obst_UGV2 = Obstacle(init.gridalize((4.5, 2.5, 2), scale), 'obst_UGV')
-obst_person1 = Obstacle(init.gridalize((3, 2.5, 0), scale), 'obst_person')
+# obst_UGV2 = Obstacle(init.gridalize((4.5, 2.5, 2), scale), 'obst_UGV')
+# obst_person1 = Obstacle(init.gridalize((3, 2.5, 0), scale), 'obst_person')
 # obst_UAV1 = Obstacle(init.gridalize((random.uniform(0.25,1.75), random.uniform(2.25,3.75), random.uniform(1,3)), scale), 'obst_UAV')
 # obst_UAV2 = Obstacle(init.gridalize((random.uniform(0.25,1.75), random.uniform(0.25,1.75), random.uniform(1,3)), scale), 'obst_UAV')
 # obst_UAV3 = Obstacle(init.gridalize((random.uniform(3.25,4.75), random.uniform(3.25,4.75), random.uniform(1,3)), scale), 'obst_UAV')
@@ -252,22 +253,22 @@ obst_person1 = Obstacle(init.gridalize((3, 2.5, 0), scale), 'obst_person')
 # obst_UGV2 = Obstacle(init.gridalize((4.5, random.uniform(0.5,2.5), 2), scale), 'obst_UGV')
 # obst_person1 = Obstacle(init.gridalize((3, random.uniform(1,3), 0), scale), 'obst_person')
 # set the size of obstacles
-obst_UAV1.setSize(init.gridalize((0.5, 0.5, 2), scale))
-obst_UAV2.setSize(init.gridalize((0.5, 0.5, 2), scale))
-obst_UAV3.setSize(init.gridalize((0.5, 0.5, 2), scale))
-obst_UGV1.setSize(init.gridalize((1, 1, 2), scale))
-obst_UGV2.setSize(init.gridalize((1, 1, 2), scale))
-obst_person1.setSize(init.gridalize((2, 2, height_of_map), scale))
+# obst_UAV1.setSize(init.gridalize((0.5, 0.5, 2), scale))
+# obst_UAV2.setSize(init.gridalize((0.5, 0.5, 2), scale))
+# obst_UAV3.setSize(init.gridalize((0.5, 0.5, 2), scale))
+obst_UGV1.setSize(init.gridalize((0, 0, 0), scale))
+# obst_UGV2.setSize(init.gridalize((1, 1, 2), scale))
+# obst_person1.setSize(init.gridalize((2, 2, height_of_map), scale))
 
-obstArray = [obst_UAV1, obst_UAV2, obst_UAV3, obst_UGV1, obst_UGV2, obst_person1]
+# obstArray = [obst_UAV1, obst_UAV2, obst_UAV3, obst_UGV1, obst_UGV2, obst_person1]
 
-# diagram.walls = list(set(diagram.walls + obst_UAV1.points))
-diagram.walls = list(set(diagram.walls + obst_UAV1.points + obst_UAV2.points +
-                    obst_UAV3.points + obst_UGV1.points + obst_UGV2.points +
-                    obst_person1.points))
+# diagram.walls = list(set(diagram.walls + obst_UGV1.points))
+# diagram.walls = list(set(diagram.walls + obst_UAV1.points + obst_UAV2.points +
+#                     obst_UAV3.points + obst_UGV1.points + obst_UGV2.points +
+#                     obst_person1.points))
 
-# callback_obst_flg = True
-# callback_start_flg = True
+callback_obst_flg = False
+callback_start_flg = True
 # callback_end_flg = True
 
 # Loop for path planning
@@ -280,28 +281,29 @@ while not rospy.is_shutdown():
     print
     print 'end_point: ', end_point
 
-    # # receive obstacle postion
-    # while callback_obst_flg:
-    #     obstSub = rospy.Subscriber('obst_request', PoseStamped, callback_obst)
-    #     callback_obst_flg = False
-    # # receive current position of UAV
-    # while callback_start_flg:
-    #     ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_start)
-    #     callback_start_flg = False
+    # receive obstacle postion
+    while callback_obst_flg:
+        obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst)
+        callback_obst_flg = False
+    # receive current position of UAV
+    while callback_start_flg:
+        ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_start)
+        callback_start_flg = False
     # # receive requested destination
     # while callback_end_flg:
     #     ppSub   = rospy.Subscriber('end_request', PoseStamped, callback_end)
     #     callback_end_flg = False
 
+    obstArray = [obst_UGV1]
+
     boundary = visualization.setBoundary(length_of_map, width_of_map, height_of_map)
-    obstacle = visualization.setObstacle(diagram.walls)
+    obstacle = visualization.setObstacle(obst_UGV1.points)
 
     # Publish the boundary and obstacle
     obstPub.publish(boundary)
     obstPub.publish(obstacle)
 
-    # for point in diagram.walls:
-    if end_point in diagram.walls:
+    if obst_UGV1.conflict(end_point):
     # if start_point in diagram.walls or end_point in diagram.walls:
         print
         print 'Destination conflicts with obstacle!'
@@ -348,26 +350,26 @@ while not rospy.is_shutdown():
         print
         print 'Heap percolated: ', heap_percolation
 
-        UGV1_key = []
-        for key in obst_UGV1.range:
-            UGV1_key.append((key))
-        f = open('obstacles', 'w')
-        f.write(str(obst_UGV1.range))
-        f.close()
+        # UGV1_key = []
+        # for key in obst_UGV1.range:
+        #     UGV1_key.append((key))
+        # f = open('obstacles', 'w')
+        # f.write(str(obst_UGV1.range))
+        # f.close()
+        #
+        # f = open('keys', 'w')
+        # f.write(str(UGV1_key))
+        # f.close()
+        #
+        # temp = []
+        # for i in range(len(neighbourPoint.points)):
+        #     if obst_UGV1.left <= neighbourPoint.points[i].x <= obst_UGV1.right and obst_UGV1.back <= neighbourPoint.points[i].y <= obst_UGV1.front:
+        #         temp.append((neighbourPoint.points[i].x, neighbourPoint.points[i].y, neighbourPoint.points[i].z))
+        # f = open('neighbourPoint','w')
+        # f.write(str(temp))
+        # f.close()
 
-        f = open('keys', 'w')
-        f.write(str(UGV1_key))
-        f.close()
-
-        temp = []
-        for i in range(len(neighbourPoint.points)):
-            if obst_UGV1.left <= neighbourPoint.points[i].x <= obst_UGV1.right and obst_UGV1.back <= neighbourPoint.points[i].y <= obst_UGV1.front:
-                temp.append((neighbourPoint.points[i].x, neighbourPoint.points[i].y, neighbourPoint.points[i].z))
-        f = open('neighbourPoint','w')
-        f.write(str(temp))
-        f.close()
-
-    rospy.sleep(5.)
+    rospy.sleep(2.)
         # rate.sleep()
 
 # except KeyboardInterrupt:
