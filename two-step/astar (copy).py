@@ -108,6 +108,15 @@ class Obstacle():
             return False
 
 
+def pathBlocked(obstArray, finalTrajectory):
+    for item in obstArray:
+        for point in finalTrajectory:
+            if item.conflict(point):
+                return True
+    else:
+        return False
+
+
 def reconstruct_path(came_from, start, goal):
     current = goal
     path = [current]
@@ -137,7 +146,7 @@ def heuristic(a, b):
     (x1, y1, z1) = a
     (x2, y2, z2) = b
     # return max(abs(x1-x2), abs(y1-y2), abs(z1-z2))
-    return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2) * 1.05
+    return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2) * 1.1
 
 
 def a_star_search(graph, start, goal):
@@ -201,71 +210,181 @@ def a_star_search(graph, start, goal):
 #                         int(data.pose.position.z* scale))
 #     callback_end_flg = True
 
+def roughPath():
+    global length_of_map
+    global width_of_map
+    global height_of_map
+    global current_point
+    global target_point
+    global scale_rough
+    global obstArray
+    global heap_percolation
+    global roughTrajectory
+
+    # initialize environment
+    (length_of_map, width_of_map, height_of_map) = init.gridalize((5, 5, 3), scale_rough)
+    current_point   = tuple(init.gridalize((0, 0, 0), scale_rough))
+    target_point    = tuple(init.gridalize((5, 5, 3), scale_rough))
+
+    diagram = GridWithWeights(length_of_map, width_of_map, height_of_map)
+
+    # initialize obstacles with position of their centre point
+    obst_UAV1 = Obstacle(init.gridalize((0.5, 2.5, 1), scale_rough), init.gridalize(0.25, scale_rough),
+                    init.gridalize(2, scale_rough), 'obst_UAV')
+    obst_UAV2 = Obstacle(init.gridalize((1.5, 0.5, 1.5), scale_rough), init.gridalize(0.25, scale_rough),
+                    init.gridalize(2, scale_rough), 'obst_UAV')
+    obst_UAV3 = Obstacle(init.gridalize((3.5, 4.5, 2), scale_rough), init.gridalize(0.25, scale_rough),
+                    init.gridalize(2, scale_rough), 'obst_UAV')
+    obst_UGV1 = Obstacle(init.gridalize((1.5, 4.5, 2), scale_rough), init.gridalize(0.5, scale_rough),
+                    init.gridalize(2, scale_rough), 'obst_UGV')
+    obst_UGV2 = Obstacle(init.gridalize((4.5, 2.5, 2), scale_rough), init.gridalize(0.5, scale_rough),
+                    init.gridalize(2, scale_rough), 'obst_UGV')
+    obst_person1 = Obstacle(init.gridalize((3, 2.5, 0), scale_rough), init.gridalize(1, scale_rough),
+                    height_of_map, 'obst_person') # height_of_map is already gridalized
+
+    obst_UAV1.setRange()
+    obst_UAV2.setRange()
+    obst_UAV3.setRange()
+    obst_UGV1.setRange()
+    obst_UGV2.setRange()
+    obst_person1.setRange()
+
+    obstArray = [obst_UAV1, obst_UAV2, obst_UAV3, obst_UGV1, obst_UGV2, obst_person1]
+
+    heap_percolation = 0
+    start_point = current_point
+    end_point   = target_point
+    print '====================================='
+    print 'Generating the first rough path'
+    print
+    print 'start_point: ', start_point
+    print
+    print 'end_point: ', end_point
+
+    for item in obstArray:
+        if item.conflict(end_point):
+            print
+            rospy.logwarn('Destination conflicts with obstacle!')
+            # target_point = (int(random.uniform(2,3)*scale_rough), int(random.uniform(2,3)*scale_rough),
+            #                     int(random.uniform(1,2)*scale_rough))
+            rospy.signal_shutdown()
+    else:
+        # Plan the path
+        start_time = timeit.default_timer()
+        came_from, cost_so_far = a_star_search(diagram, start_point, end_point)
+        roughTrajectory = reconstruct_path(came_from, start=start_point, goal=end_point)
+        execution_time = timeit.default_timer() - start_time
+
+        searchedPoints = []
+        for key in came_from:
+            searchedPoints.append(came_from[key])
+        searchedPoints.remove(None)
+        # Performance measurement
+        len_of_path = cost_so_far[end_point]
+        vertex_expension = len(searchedPoints)
+
+        print
+        print 'Length of path: ', len_of_path
+        print
+        print 'Path planning execution time: ', execution_time
+        print
+        print 'Vetices expanded: ', vertex_expension
+        print
+        print 'Heap percolated: ', heap_percolation
+
+
 
 ###############################################################################
-# try:
+###############################################################################
+gotPath = False
+scale_rough = 4
+scale_fine = 100
+scaleRatio = int(scale_fine/scale_rough)
+refineRatio = int((scale_fine/scale_rough)**(1.0/3))
+
+current_point   = tuple(init.gridalize((0, 0, 0), scale_fine))
+target_point    = tuple(init.gridalize((0, 0, 0), scale_fine))
+i = 2
+
 # Performance measurement
 len_of_path = 0
 execution_time = 0
 vertex_expension = 0
 
 # Initialization
-scale = 4
-
 rospy.init_node('astar_node', anonymous=True) # rosnode name
 (pathPub, pointsPub, boundPub, obstPub) = init.initPublishers() # initialize publishers
 rospy.sleep(0.3) # it takes time to initialize publishers
 rate = rospy.Rate(1) # loop runs at x Hertz
 
-(length_of_map, width_of_map, height_of_map) = init.gridalize((5, 5, 3), scale)
-current_point   = tuple(init.gridalize((0, 0, 0), scale))
-target_point    = tuple(init.gridalize((5, 5, 3), scale))
-
-diagram = GridWithWeights(length_of_map, width_of_map, height_of_map)
-# diagram.walls = []
-
-# initialize obstacles with position of their centre point
-obst_UAV1 = Obstacle(init.gridalize((0.5, 2.5, 1), scale), init.gridalize(0.25, scale),
-                init.gridalize(2, scale), 'obst_UAV')
-obst_UAV2 = Obstacle(init.gridalize((1.5, 0.5, 1.5), scale), init.gridalize(0.25, scale),
-                init.gridalize(2, scale), 'obst_UAV')
-obst_UAV3 = Obstacle(init.gridalize((3.5, 4.5, 2), scale), init.gridalize(0.25, scale),
-                init.gridalize(2, scale), 'obst_UAV')
-obst_UGV1 = Obstacle(init.gridalize((1.5, 4.5, 2), scale), init.gridalize(0.5, scale),
-                init.gridalize(2, scale), 'obst_UGV')
-obst_UGV2 = Obstacle(init.gridalize((4.5, 2.5, 2), scale), init.gridalize(0.5, scale),
-                init.gridalize(2, scale), 'obst_UGV')
-obst_person1 = Obstacle(init.gridalize((3, 2.5, 0), scale), init.gridalize(1, scale),
-                height_of_map, 'obst_person') # height_of_map is already gridalized
-# obst_UAV1 = Obstacle(init.gridalize((random.uniform(0.25,1.75), random.uniform(2.25,3.75), random.uniform(1,3)), scale), 'obst_UAV')
-# obst_UAV2 = Obstacle(init.gridalize((random.uniform(0.25,1.75), random.uniform(0.25,1.75), random.uniform(1,3)), scale), 'obst_UAV')
-# obst_UAV3 = Obstacle(init.gridalize((random.uniform(3.25,4.75), random.uniform(3.25,4.75), random.uniform(1,3)), scale), 'obst_UAV')
-# obst_UGV1 = Obstacle(init.gridalize((random.uniform(0.5,2.5), 4.5, 2), scale), 'obst_UGV')
-# obst_UGV2 = Obstacle(init.gridalize((4.5, random.uniform(0.5,2.5), 2), scale), 'obst_UGV')
-# obst_person1 = Obstacle(init.gridalize((3, random.uniform(1,3), 0), scale), 'obst_person')
-# set the size of obstacles
-obst_UAV1.setRange()
-obst_UAV2.setRange()
-obst_UAV3.setRange()
-obst_UGV1.setRange()
-obst_UGV2.setRange()
-obst_person1.setRange()
-
-obstArray = [obst_UAV1, obst_UAV2, obst_UAV3, obst_UGV1, obst_UGV2, obst_person1]
-
-# diagram.walls = list(set(diagram.walls + obst_UAV1.points + obst_UAV2.points +
-#                     obst_UAV3.points + obst_UGV1.points + obst_UGV2.points +
-#                     obst_person1.points))
-
-# callback_obst_flg = True
-# callback_start_flg = True
-# callback_end_flg = True
-
-# Loop for path planning
 while not rospy.is_shutdown():
+    if gotPath:
+        if pathBlocked(obstArray, finalTrajectory):
+            roughPath() # plan a new rough path
+        else:
+            pass
+    else:
+            roughPath()
+            gotPath = True
+
+###########################################
+# Generate the refined path
+
+    print
+    print 'Start to refine the path...'
+
+    # initialize environment
+    (length_of_map, width_of_map, height_of_map) = init.gridalize((5, 5, 3), scale_fine)
+    current_point   = target_point
+    target_point    = (roughTrajectory[i][0]*scaleRatio, roughTrajectory[i][1]*scaleRatio,
+                        roughTrajectory[i][2]*scaleRatio)
+    # target_point    = (roughTrajectory[refineRatio][0]*scaleRatio, roughTrajectory[refineRatio][1]*scaleRatio,
+    #                     roughTrajectory[refineRatio][2]*scaleRatio)
+
+    diagram = GridWithWeights(length_of_map, width_of_map, height_of_map)
+
+    # initialize obstacles with position of their centre point
+    obst_UAV1 = Obstacle(init.gridalize((0.5, 2.5, 1), scale_fine), init.gridalize(0.25, scale_fine),
+                    init.gridalize(2, scale_fine), 'obst_UAV')
+    obst_UAV2 = Obstacle(init.gridalize((1.5, 0.5, 1.5), scale_fine), init.gridalize(0.25, scale_fine),
+                    init.gridalize(2, scale_fine), 'obst_UAV')
+    obst_UAV3 = Obstacle(init.gridalize((3.5, 4.5, 2), scale_fine), init.gridalize(0.25, scale_fine),
+                    init.gridalize(2, scale_fine), 'obst_UAV')
+    obst_UGV1 = Obstacle(init.gridalize((1.5, 4.5, 2), scale_fine), init.gridalize(0.5, scale_fine),
+                    init.gridalize(2, scale_fine), 'obst_UGV')
+    obst_UGV2 = Obstacle(init.gridalize((4.5, 2.5, 2), scale_fine), init.gridalize(0.5, scale_fine),
+                    init.gridalize(2, scale_fine), 'obst_UGV')
+    obst_person1 = Obstacle(init.gridalize((3, 2.5, 0), scale_fine), init.gridalize(1, scale_fine),
+                    height_of_map, 'obst_person') # height_of_map is already gridalized
+    # obst_UAV1 = Obstacle(init.gridalize((random.uniform(0.25,1.75), random.uniform(2.25,3.75), random.uniform(1,3)), scale_fine), 'obst_UAV')
+    # obst_UAV2 = Obstacle(init.gridalize((random.uniform(0.25,1.75), random.uniform(0.25,1.75), random.uniform(1,3)), scale_fine), 'obst_UAV')
+    # obst_UAV3 = Obstacle(init.gridalize((random.uniform(3.25,4.75), random.uniform(3.25,4.75), random.uniform(1,3)), scale_fine), 'obst_UAV')
+    # obst_UGV1 = Obstacle(init.gridalize((random.uniform(0.5,2.5), 4.5, 2), scale_fine), 'obst_UGV')
+    # obst_UGV2 = Obstacle(init.gridalize((4.5, random.uniform(0.5,2.5), 2), scale_fine), 'obst_UGV')
+    # obst_person1 = Obstacle(init.gridalize((3, random.uniform(1,3), 0), scale_fine), 'obst_person')
+    # set the size of obstacles
+    obst_UAV1.setRange()
+    obst_UAV2.setRange()
+    obst_UAV3.setRange()
+    obst_UGV1.setRange()
+    obst_UGV2.setRange()
+    obst_person1.setRange()
+
+    obstArray = [obst_UAV1, obst_UAV2, obst_UAV3, obst_UGV1, obst_UGV2, obst_person1]
+
+    # diagram.walls = list(set(diagram.walls + obst_UAV1.points + obst_UAV2.points +
+    #                     obst_UAV3.points + obst_UGV1.points + obst_UGV2.points +
+    #                     obst_person1.points))
+
+    # callback_obst_flg = True
+    # callback_start_flg = True
+    # callback_end_flg = True
+
     heap_percolation = 0
     start_point = current_point
     end_point   = target_point
+    print
+    print 'refineRatio: ', refineRatio
     print
     print 'start_point: ', start_point
     print
@@ -301,8 +420,8 @@ while not rospy.is_shutdown():
             print
             print 'Destination conflicts with obstacle!'
             # print 'Starting point/ destination conflicts with obstacle!'
-            target_point = (int(random.uniform(2,3)*scale), int(random.uniform(2,3)*scale),
-                                int(random.uniform(1,2)*scale))
+            target_point = (int(random.uniform(2,3)*scale_fine), int(random.uniform(2,3)*scale_fine),
+                                int(random.uniform(1,2)*scale_fine))
             break
     else:
         # Plan the path
@@ -342,32 +461,7 @@ while not rospy.is_shutdown():
         print
         print 'Heap percolated: ', heap_percolation
 
-        # UGV1_key = []
-        # for key in obst_UGV1.range:
-        #     UGV1_key.append((key))
-        # f = open('obstacles', 'w')
-        # f.write(str(obst_UGV1.range))
-        # f.close()
-        #
-        # f = open('keys', 'w')
-        # f.write(str(UGV1_key))
-        # f.close()
-        #
-        # temp = []
-        # for i in range(len(neighbourPoint.points)):
-        #     if obst_UGV1.left <= neighbourPoint.points[i].x <= obst_UGV1.right and obst_UGV1.back <= neighbourPoint.points[i].y <= obst_UGV1.front:
-        #         temp.append((neighbourPoint.points[i].x, neighbourPoint.points[i].y, neighbourPoint.points[i].z))
-        # f = open('neighbourPoint','w')
-        # f.write(str(temp))
-        # f.close()
-
-    rospy.sleep(5.)
+        i += 2
+        rospy.sleep(5.)
         # rate.sleep()
-
-# except KeyboardInterrupt:
-#     rospy.logfatal('ahahah')
-#     print 'goalpoint: ', goal
-#     print
-#     print 'walls: \n', diagram.walls
-#     print
-#     sys.exit()
+        # rospy.signal_shutdown()

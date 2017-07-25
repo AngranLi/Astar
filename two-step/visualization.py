@@ -50,7 +50,7 @@ def setPathMarkers(finalTrajectory, came_from):
     return (sourcePoint, goalPoint, neighbourPoint, finalPath)
 
 
-def setBoundary(length_of_map, width_of_map, height_of_map):
+def setBoundary(mapBound_grid):
     boundary= init.initBoundMarker()
 
     # first point
@@ -62,22 +62,22 @@ def setBoundary(length_of_map, width_of_map, height_of_map):
 
     # second point
     tempPoint = Point()
-    tempPoint.x = length_of_map
+    tempPoint.x = mapBound_grid[0]
     tempPoint.y = 0
     tempPoint.z = 0
     boundary.points.append(tempPoint)
 
     # third point
     tempPoint = Point()
-    tempPoint.x = length_of_map
-    tempPoint.y = width_of_map
+    tempPoint.x = mapBound_grid[0]
+    tempPoint.y = mapBound_grid[1]
     tempPoint.z = 0
     boundary.points.append(tempPoint)
 
     # fourth point
     tempPoint = Point()
     tempPoint.x = 0
-    tempPoint.y = width_of_map
+    tempPoint.y = mapBound_grid[1]
     tempPoint.z = 0
     boundary.points.append(tempPoint)
 
@@ -92,35 +92,35 @@ def setBoundary(length_of_map, width_of_map, height_of_map):
     tempPoint = Point()
     tempPoint.x = 0
     tempPoint.y = 0
-    tempPoint.z = height_of_map
+    tempPoint.z = mapBound_grid[2]
     boundary.points.append(tempPoint)
 
     # second point
     tempPoint = Point()
-    tempPoint.x = length_of_map
+    tempPoint.x = mapBound_grid[0]
     tempPoint.y = 0
-    tempPoint.z = height_of_map
+    tempPoint.z = mapBound_grid[2]
     boundary.points.append(tempPoint)
 
     # third point
     tempPoint = Point()
-    tempPoint.x = length_of_map
-    tempPoint.y = width_of_map
-    tempPoint.z = height_of_map
+    tempPoint.x = mapBound_grid[0]
+    tempPoint.y = mapBound_grid[1]
+    tempPoint.z = mapBound_grid[2]
     boundary.points.append(tempPoint)
 
     # fourth point
     tempPoint = Point()
     tempPoint.x = 0
-    tempPoint.y = width_of_map
-    tempPoint.z = height_of_map
+    tempPoint.y = mapBound_grid[1]
+    tempPoint.z = mapBound_grid[2]
     boundary.points.append(tempPoint)
 
     # first point again to complete the box
     tempPoint = Point()
     tempPoint.x = 0
     tempPoint.y = 0
-    tempPoint.z = height_of_map
+    tempPoint.z = mapBound_grid[2]
     boundary.points.append(tempPoint)
 
     return boundary
@@ -141,7 +141,7 @@ def setObstacle(obstArray):
         elif item.text == 'obst_UGV':
             obstMarker.pose.position.z = item.centre_point[2] - item.height/2
         elif item.text == 'obst_person':
-            obstMarker.pose.position.z = 30/2
+            obstMarker.pose.position.z = 300/2
         obstMarker.id = i
         i += 1
         obstMarkerArray.markers.append(obstMarker)
