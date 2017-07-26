@@ -29,7 +29,7 @@ class start_pub():
 
         #a counter so the location changes
 
-        self.counterMax = 2; # waiting time = counterMax*rospy.Rate
+        self.counterMax = 4; # waiting time = counterMax*rospy.Rate
         self.counter = self.counterMax;
 
         while not rospy.is_shutdown():

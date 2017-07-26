@@ -9,49 +9,86 @@ from geometry_msgs.msg import PoseStamped
     The point is redefined randomly at certain frequancy.
 '''
 
-class obst_pub():
+class pub_obst():
 
     def __init__(self):
-        markerPub = rospy.Publisher('/UAV_2/pose', PoseStamped, queue_size=10)
-        rospy.Subscriber("/UAV_2/pose", PoseStamped, self.callback)
+        UAV1_Pub = rospy.Publisher('/UAV_2/pose', PoseStamped, queue_size=10)
+        UGV1_Pub = rospy.Publisher('/UAV_3/pose', PoseStamped, queue_size=10)
+        person1_Pub = rospy.Publisher('/UAV_4/pose', PoseStamped, queue_size=10)
+        rospy.Subscriber("/UAV_2/pose", PoseStamped, self.callback_UAV_2)
+        rospy.Subscriber("/UAV_3/pose", PoseStamped, self.callback_UAV_3)
+        rospy.Subscriber("/UAV_4/pose", PoseStamped, self.callback_UAV_4)
         rospy.init_node('obst_pub', anonymous=True)
 
         rate = rospy.Rate(1)
 
-        self.obst_request = PoseStamped()
-        self.obst_request.header.frame_id = "path_planner"
-        self.obst_request.header.stamp    = rospy.get_rostime()
+        self.UAV1 = PoseStamped()
+        self.UAV1.header.frame_id = "path_planner"
+        self.UAV1.header.stamp    = rospy.get_rostime()
 
-        self.obst_request.pose.position.x = 2.0
-        self.obst_request.pose.position.y = 2.0
-        self.obst_request.pose.position.z = 1.0
-        self.obst_request.pose.orientation.w = 1.0
+        self.UAV1.pose.position.x = 2.0
+        self.UAV1.pose.position.y = 2.0
+        self.UAV1.pose.position.z = 1.0
+        self.UAV1.pose.orientation.w = 1.0
 
-        #a counter so the location changes
 
-        self.counterMax = 2; # waiting time = counterMax*rospy.Rate
+        self.UGV1 = PoseStamped()
+        self.UGV1.header.frame_id = "path_planner"
+        self.UGV1.header.stamp    = rospy.get_rostime()
+
+        self.UGV1.pose.position.x = 2.0
+        self.UGV1.pose.position.y = 2.0
+        self.UGV1.pose.position.z = 1.0
+        self.UGV1.pose.orientation.w = 1.0
+
+        self.person1 = PoseStamped()
+        self.person1.header.frame_id = "path_planner"
+        self.person1.header.stamp    = rospy.get_rostime()
+
+        self.person1.pose.position.x = 2.0
+        self.person1.pose.position.y = 2.0
+        self.person1.pose.position.z = 1.0
+        self.person1.pose.orientation.w = 1.0
+
+        # a counter so the location changes
+        self.counterMax = 4; # waiting time = counterMax*rospy.Rate
         self.counter = self.counterMax;
 
         while not rospy.is_shutdown():
-
             self.counter = self.counter + 1;
-
             if (self.counter > self.counterMax):
 
-                markerPub.publish(self.obst_request)
-
                 self.counter = 0
+                UAV1_Pub.publish(self.UAV1)
+                self.UAV1.pose.position.x = random.uniform(0.25, 3.75)
+                self.UAV1.pose.position.y = random.uniform(0.25, 3.75)
+                self.UAV1.pose.position.z = random.uniform(1.0, 2.5)
 
-                self.obst_request.pose.position.x = random.uniform(1.5, 3.5)
-                self.obst_request.pose.position.y = random.uniform(1.5, 3.5)
-                self.obst_request.pose.position.z = random.uniform(2, 2.5)
+                UGV1_Pub.publish(self.UGV1)
+                self.UGV1.pose.position.x = random.uniform(1.5, 3.5)
+                self.UGV1.pose.position.y = random.uniform(1.5, 3.5)
+                self.UGV1.pose.position.z = random.uniform(1.9, 2.1)
+
+                person1_Pub.publish(self.person1)
+                self.person1.pose.position.x = random.uniform(2.0, 3.0)
+                self.person1.pose.position.y = random.uniform(2.0, 3.0)
+                self.person1.pose.position.z = random.uniform(1.5, 2.0)
 
             rate.sleep()
 
-    def callback(self, data):
-        #data is of type Marker
+    def callback_UAV_2(self, data):
         #lets print some information
-        print "Obstacle received!"
-        print "centre_point:\t", data.pose.position.x, ", ", data.pose.position.y, ", ", data.pose.position.z
+        print "obst_UAV2:\t", data.pose.position.x, ", ", data.pose.position.y, ", ", data.pose.position.z
+        print
 
-obst_pub()
+    def callback_UAV_3(self, data):
+        #lets print some information
+        print "obst_UAV3:\t", data.pose.position.x, ", ", data.pose.position.y, ", ", data.pose.position.z
+        print
+
+    def callback_UAV_4(self, data):
+        #lets print some information
+        print "obst_UAV4:\t", data.pose.position.x, ", ", data.pose.position.y, ", ", data.pose.position.z
+        print
+
+pub_obst()
