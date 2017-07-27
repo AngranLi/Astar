@@ -151,6 +151,7 @@ def heuristic(a, b, heuristic_coeff):
 
 
 def a_star_search(graph, obstDict, start, goal, heuristic_coeff):
+    temp_obstDict = obstDict.copy()
     frontier = PriorityQueue()
     frontier.put(start, 0)
     came_from = {}
@@ -185,51 +186,6 @@ def a_star_search(graph, obstDict, start, goal, heuristic_coeff):
 
     return came_from, cost_so_far
 
-'''
-# need to
-def callback_obst(obstArray):
-
-    global obstArray_rough
-    global obstArray_fine
-    global mapBound_grid_rough
-    global mapBound_grid_fine
-    global pathBlocked
-    global roughTrajectory
-
-    obstArray_rough = []
-    obstArray_fine  = []
-
-    i = 0
-    for item in obstArray:
-        if typeArray[i] == 'obst_UAV':
-            obstacle_rough = Obstacle(init.gridalize((item..pose.position.x,
-                    item.pose.position.y, item.pose.position.z), scale_rough),
-                    init.gridalize(0.25, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UAV')
-            obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
-                    centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
-                    init.gridalize(0.25, scale_fine), init.gridalize(2, scale_fine), mapBound_grid_fine[2], 'obst_UAV')
-        elif typeArray[i] == 'obst_UGV':
-            obstacle_rough = Obstacle(init.gridalize((item.pose.position.x,
-                    item.pose.position.y, item.pose.position.z), scale_rough),
-                    init.gridalize(0.5, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UGV')
-            obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
-                    centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
-                    init.gridalize(0.5, scale_fine), init.gridalize(2, scale_fine), mapBound_grid_fine[2], 'obst_UGV')
-        elif typeArray[i] == 'obst_person':
-            obstacle_rough = Obstacle(init.gridalize((item.pose.position.x,
-                    item.pose.position.y, item.pose.position.z), scale_rough),
-                    init.gridalize(1, scale_rough), init.gridalize(3, scale_rough), mapBound_grid_rough[2], 'obst_UGV')
-            obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
-                    centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
-                    init.gridalize(1, scale_fine), init.gridalize(3, scale_fine), mapBound_grid_fine[2], 'obst_UGV')
-        obstArray_rough.append(obstacle_rough)
-        obstArray_fine.append(obstacle_fine)
-        i += 1
-
-    pathBlocked = checkifPathBlocked(obstArray_rough, roughTrajectory)
-
-    callback_obst_flg = True
-'''
 
 def callback_obst_UAV1(centre_point):
     # rospy.logwarn(len(diagram.walls))
@@ -242,7 +198,7 @@ def callback_obst_UAV1(centre_point):
 
     obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
-                init.gridalize(0.25, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UAV')
+                init.gridalize(0.25 *1.2, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UAV')
 
     obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
@@ -251,7 +207,7 @@ def callback_obst_UAV1(centre_point):
     obstDict_rough['obst_UAV1']  = obstacle_rough
     obstDict_fine['obst_UAV1']   = obstacle_fine
 
-    pathBlocked = checkifPathBlocked(obstDict_rough, roughTrajectory)
+    pathBlocked = checkifPathBlocked(obstDict_rough.copy(), roughTrajectory)
 
     callback_obst_UAV1_flg = True
 
@@ -267,7 +223,7 @@ def callback_obst_UGV1(centre_point):
 
     obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
-                init.gridalize(0.5, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UGV')
+                init.gridalize(0.5 *1.2, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UGV')
 
     obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
@@ -292,7 +248,7 @@ def callback_obst_person1(centre_point):
 
     obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
-                init.gridalize(1, scale_rough), init.gridalize(3, scale_rough), mapBound_grid_rough[2], 'obst_person')
+                init.gridalize(1 *1.2, scale_rough), init.gridalize(3, scale_rough), mapBound_grid_rough[2], 'obst_person')
 
     obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
@@ -343,36 +299,39 @@ def generateRoughTrajectory():
 
     for key in obstDict_rough:
         if obstDict_rough[key].conflict(startPoint):
-            rospy.logfatal('Starting point conflicts with obstacle!')
-            print 'Centre of obstacle: ', obstDict_rough[key].centre_point
-            print 'Radius of obstacle: ', obstDict_rough[key].radius
-            rospy.signal_shutdown()
+            # set the startPoint to the nearest point outside the obstacle
+            dist = math.sqrt((startPoint[0]-obstDict_rough[key].centre_point[0])**2 + (startPoint[1]-obstDict_rough[key].centre_point[1])**2)
+            startPoint = tuple((int((startPoint[0]-obstDict_rough[key].centre_point[0]) * (obstDict_rough[key].radius/dist) + obstDict_rough[key].centre_point[0]+1),
+                            int((startPoint[1]-obstDict_rough[key].centre_point[1]) * (obstDict_rough[key].radius/dist) + obstDict_rough[key].centre_point[1]+1), startPoint[2]))
+            print 'changd startPoint: ', startPoint
+            break
+
         if obstDict_rough[key].conflict(endPoint):
             rospy.logfatal('Destination conflicts with obstacle!')
             print 'Centre of obstacle: ', obstDict_rough[key].centre_point
             print 'Radius of obstacle: ', obstDict_rough[key].radius
             rospy.signal_shutdown()
-    else:
-        # Plan the path
-        start_time = timeit.default_timer()
-        came_from, cost_so_far = a_star_search(diagram_rough, obstDict_rough, startPoint, endPoint, 1.01)
-        roughTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
-        execution_time = timeit.default_timer() - start_time
 
-        # searchedPoints = []
-        # for key in came_from:
-        #     searchedPoints.append(came_from[key])
-        # searchedPoints.remove(None)
-        # Performance measurement
-        len_of_path = cost_so_far[endPoint]
-        # vertex_expension = len(searchedPoints)
-        vertex_expension = len(came_from)
+    # Plan the path
+    start_time = timeit.default_timer()
+    came_from, cost_so_far = a_star_search(diagram_rough, obstDict_rough, startPoint, endPoint, 1.01)
+    roughTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
+    execution_time = timeit.default_timer() - start_time
 
-        print
-        print 'Length of path: ', float(len_of_path / scale_rough)
-        print 'Path planning execution time: ', execution_time
-        print 'Vetices expanded: ', vertex_expension
-        print 'Heap percolated: ', heap_percolation
+    # searchedPoints = []
+    # for key in came_from:
+    #     searchedPoints.append(came_from[key])
+    # searchedPoints.remove(None)
+    # Performance measurement
+    len_of_path = cost_so_far[endPoint]
+    # vertex_expension = len(searchedPoints)
+    vertex_expension = len(came_from)
+
+    print
+    print 'Length of path: ', float(len_of_path / scale_rough)
+    print 'Path planning execution time: ', execution_time
+    print 'Vetices expanded: ', vertex_expension
+    print 'Heap percolated: ', heap_percolation
 
     return roughTrajectory
 
@@ -422,49 +381,52 @@ def generateRefinedTrajectory(roughTrajectory):
 
     for key in obstDict_fine:
         if obstDict_fine[key].conflict(startPoint):
-            rospy.logfatal('Starting poin conflicts with obstacle!')
-            print 'Centre of obstacle: ', obstDict_fine[key].centre_point
-            print 'Radius of obstacle: ', obstDict_fine[key].radius
-            rospy.signal_shutdown()
+            # set the startPoint to the nearest point outside the obstacle
+            dist = math.sqrt((startPoint[0]-obstDict_fine[key].centre_point[0])**2 + (startPoint[1]-obstDict_fine[key].centre_point[1])**2)
+            startPoint = tuple((int((startPoint[0]-obstDict_fine[key].centre_point[0]) * (obstDict_fine[key].radius/dist) + obstDict_fine[key].centre_point[0]+1),
+                            int((startPoint[1]-obstDict_fine[key].centre_point[1]) * (obstDict_fine[key].radius/dist) + obstDict_fine[key].centre_point[1]+1), startPoint[2]))
+            print 'changd startPoint: ', startPoint
+            break
+
         if obstDict_fine[key].conflict(endPoint):
             rospy.logfatal('Destination conflicts with obstacle!')
             print 'Centre of obstacle: ', obstDict_fine[key].centre_point
             print 'Radius of obstacle: ', obstDict_fine[key].radius
             rospy.signal_shutdown()
-    else:
-        # Plan the path
-        print
-        print 'Planning path...'
-        start_time = timeit.default_timer()
-        came_from, cost_so_far = a_star_search(diagram_fine, obstDict_fine, startPoint, endPoint, 1.5)
-        finalTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
-        execution_time = timeit.default_timer() - start_time
 
-        # These four values are all visualization markers!
-        (sourcePoint, goalPoint, neighbourPoint,
-            finalPath) = visualization.setPathMarkers(finalTrajectory, came_from)
-        finalPath.text = '0'
+    # Plan the path
+    print
+    print 'Planning path...'
+    start_time = timeit.default_timer()
+    came_from, cost_so_far = a_star_search(diagram_fine, obstDict_fine, startPoint, endPoint, 1.5)
+    finalTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
+    execution_time = timeit.default_timer() - start_time
 
-        # Publish the path
-        pointsPub.publish(sourcePoint)
-        pointsPub.publish(goalPoint)
-        pointsPub.publish(neighbourPoint)
-        pathPub.publish(finalPath)
+    # These four values are all visualization markers!
+    (sourcePoint, goalPoint, neighbourPoint,
+        finalPath) = visualization.setPathMarkers(finalTrajectory, came_from)
+    finalPath.text = '0'
 
-        print
-        print 'Path sent.'
+    # Publish the path
+    pointsPub.publish(sourcePoint)
+    pointsPub.publish(goalPoint)
+    pointsPub.publish(neighbourPoint)
+    pathPub.publish(finalPath)
 
-        # Performance measurement
-        len_of_path = cost_so_far[endPoint]
-        vertex_expension = len(neighbourPoint.points)
-        # f = open('cost_so_far', 'w')
-        # f.write(str(cost_so_far))
-        # f.close()
-        print
-        print 'Length of path: ', float(len_of_path/scale_fine)
-        print 'Path planning execution time: ', execution_time
-        print 'Vetices expanded: ', vertex_expension
-        print 'Heap percolated: ', heap_percolation
+    print
+    print 'Path sent.'
+
+    # Performance measurement
+    len_of_path = cost_so_far[endPoint]
+    vertex_expension = len(neighbourPoint.points)
+    # f = open('cost_so_far', 'w')
+    # f.write(str(cost_so_far))
+    # f.close()
+    print
+    print 'Length of path: ', float(len_of_path/scale_fine)
+    print 'Path planning execution time: ', execution_time
+    print 'Vetices expanded: ', vertex_expension
+    print 'Heap percolated: ', heap_percolation
 
     return finalTrajectory
 
@@ -473,7 +435,7 @@ def generateRefinedTrajectory(roughTrajectory):
 ###############################################################################
 ###############################################################################
 ''' Set original environment '''
-mapBound_metre = (4, 4, 2.5)      # 3D boundary of the operating environment
+mapBound_metre = (5, 5, 2.5)      # 3D boundary of the operating environment
 scale_rough = 4
 scale_fine = 100
 scaleRatio = float(scale_fine/scale_rough)
@@ -482,19 +444,19 @@ refineRatio = int((scale_fine/scale_rough)**(1.0/3))
 startPoint  = (0, 0, 0)
 endPoint    = (0, 0, 0)
 current_position  = (0.5, 0.5, 0.5)
-target_position   = (4, 4, 2.5)
+target_position   = (4.5, 4, 2.5)
 
 ''' Initialize ROS node and publishers '''
 rospy.init_node('astar_node', anonymous=True) # rosnode name
 (pathPub, pointsPub, boundPub, obstPub, roughPub) = init.initPublishers() # initialize publishers
 rospy.sleep(0.3) # it takes time to initialize publishers
-rate = rospy.Rate(1) # loop runs at x Hertz
+rate = rospy.Rate(10) # loop runs at x Hertz
 
 ''' Set original value of flags '''
 gotPath = False
 pathBlocked = True
 callback_obst_UAV1_flg = True
-callback_obst_UGV1_flg = True
+# callback_obst_UGV1_flg = True
 callback_obst_person1_flg = True
 callback_current_flg = True
 callback_target_flg = True
@@ -525,11 +487,11 @@ while not rospy.is_shutdown():
     while callback_obst_UAV1_flg:
         obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
         callback_obst_UAV1_flg = False
-    while callback_obst_UGV1_flg:
-        obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
-        callback_obst_UGV1_flg = False
+    # while callback_obst_UGV1_flg:
+    #     obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
+    #     callback_obst_UGV1_flg = False
     while callback_obst_person1_flg:
-        obstSub = rospy.Subscriber('/UAV_4/pose', PoseStamped, callback_obst_person1)
+        obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_person1)
         callback_obst_person1_flg = False
 
     # receive current position of UAV
@@ -554,6 +516,6 @@ while not rospy.is_shutdown():
     ''' Refine the trajectory '''
     finalTrajectory = generateRefinedTrajectory(roughTrajectory)
 
-    rospy.sleep(2.)
-        # rate.sleep()
+    # rospy.sleep(2.)
+    rate.sleep()
         # rospy.signal_shutdown()
