@@ -14,18 +14,14 @@ class Cell():
         self.x = 0
         self.y = 0
         self.z = 0
-        self.dfsx = 0   # needed only for generating dfs mazes
-        self.dfsy = 0
-        self.dfsz = 0
+        # self.dfsx = 0   # needed only for generating dfs mazes
+        # self.dfsy = 0
+        # self.dfsz = 0
         self.g = inc.LARGE
         self.rhs = inc.LARGE
         self.key = [0, 0, 0]
         self.generated = 0
         self.heapindex = 0
-
-
-'''maze.c'''
-
 
 def preprocessmaze():
     global maze
@@ -59,13 +55,13 @@ def preprocessmaze():
                     maze[y][x].succ[d] = maze[newy][newx]
                 else:
                     maze[y][x].succ[d] = None
-    '''
-    if DEBUG:
-        assert(STARTY % 2 == 0)
-        assert(STARTX % 2 == 0)
-        assert(GOALY % 2 == 0)
-        assert(GOALX % 2 == 0)
-    '''
+    # #ifdef DEBUG
+    #     assert(STARTY % 2 == 0);
+    #     assert(STARTX % 2 == 0);
+    #     assert(GOALY % 2 == 0);
+    #     assert(GOALX % 2 == 0);
+    # #endif
+
     mazestart   = maze[inc.STARTY][inc.STARTX]
     mazegoal    = maze[inc.GOALY][inc.GOALX]
     mazeiteration = 0
@@ -82,7 +78,7 @@ def postprocessmaze():
             for d1 in range(inc.DIRECTIONS):
                 maze[y][x].move[d1] = maze[y][x].succ[d1]
 
-    '''don't know the purpoer of this section'''
+    '''don't know the purpose of this section'''
     for d1 in range(inc.DIRECTIONS):
         if (mazegoal.move[d1] is not None) and (mazegoal.move[d1].obstacle):
             tmpcell = mazegoal.move[d1]
@@ -109,6 +105,7 @@ def newrandommaze():
     postprocessmaze()
 
 
+'''
 def newdfsmaze(wallstoremove):
     global maze
     global mazestart
@@ -117,11 +114,11 @@ def newdfsmaze(wallstoremove):
     permute = [0, 1, 2, 3, 4, 5, 6, 7]
 
     preprocessmaze()
-    '''
-    if DEBUG:
-        assert(MAZEWIDTH % 2 == 1)
-        assert(MAZEHEIGHT % 2 == 1)
-    '''
+
+    #ifdef DEBUG
+        assert(MAZEWIDTH % 2 == 1);
+        assert(MAZEHEIGHT % 2 == 1);
+    #endif
 
     for y in range (inc.MAZEHEIGHT):
         for x in range(inc.MAZEWIDTH):
@@ -184,3 +181,4 @@ def newdfsmaze(wallstoremove):
     #     mazestart.obstacle = 0
 
     postprocessmaze()
+'''

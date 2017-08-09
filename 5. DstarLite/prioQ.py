@@ -1,6 +1,6 @@
 import rospy
 import inc
-import initMaze
+import initEnv
 
 '''heap.c'''
 
@@ -91,7 +91,7 @@ def deleteheap(thiscell):
     global heap
     global heapsize
 
-    if thiscell.heapindex != 0 and thiscell.generated == initMaze.mazeiteration:
+    if thiscell.heapindex != 0 and thiscell.generated == initEnv.mazeiteration:
         percolateupordown(thiscell.heapindex, heap[heapsize])
         heapsize = heapsize - 1
         thiscell.heapindex = 0
@@ -114,7 +114,7 @@ def insertheap(thiscell):
     global heap
     global heapsize
 
-    if thiscell.heapindex == 0 or thiscell.generated != initMaze.mazeiteration:
+    if thiscell.heapindex == 0 or thiscell.generated != initEnv.mazeiteration:
         thiscell.heapindex = 0
         # if DEBUG:
         #     if heapsize < HEAPSIZE-1:
@@ -127,7 +127,5 @@ def insertheap(thiscell):
 
 #################################################################################
 heap = {0:None}
-# for i in range(100000):
-#     heap.append(None)
 heapsize = 0
 keylength = 3

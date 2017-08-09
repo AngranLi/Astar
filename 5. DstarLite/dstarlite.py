@@ -6,13 +6,14 @@
 import random
 import rospy
 import inc
-import initMaze
-import initHeap
+import initEnv
+import prioQ
+from visualization_msgs.msg import Marker, MarkerArray
 
 def heuristic(cell):
     global maze
     global mazegoal
-    return abs(cell.y-mazegoal.y) + abs(cell.x-mazegoal.x)
+    return max(abs(cell.y-mazegoal.y), abs(cell.x-mazegoal.x))
 
 def printactualmaze():
     global maze
@@ -90,27 +91,27 @@ def initialize():
     global mazegoal
     global keymodifier
 
-    initMaze.mazeiteration = initMaze.mazeiteration + 1
+    initEnv.mazeiteration = initEnv.mazeiteration + 1
     keymodifier = 0
     mazestart.g = inc.LARGE
     mazestart.rhs = 0
     if inc.TIEBREAKING:
-        initHeap.emptyheap(3)
+        prioQ.emptyheap(3)
         mazestart.key[0] = heuristic(mazestart)
         mazestart.key[1] = heuristic(mazestart) + 1
         mazestart.key[2] = heuristic(mazestart)
     else:
-        initHeap.emptyheap(2)
+        prioQ.emptyheap(2)
         mazestart.key[0] = heuristic(mazestart)
         mazestart.key[1] = 0
 
     mazestart.searchtree = None
-    mazestart.generated = initMaze.mazeiteration
-    initHeap.insertheap(mazestart)
+    mazestart.generated = initEnv.mazeiteration
+    prioQ.insertheap(mazestart)
     mazegoal.g = inc.LARGE
     mazegoal.rhs = inc.LARGE
     mazegoal.searchtree = None
-    mazegoal.generated = initMaze.mazeiteration
+    mazegoal.generated = initEnv.mazeiteration
 
 #if RANDOMIZESUCCS:
 
@@ -165,11 +166,11 @@ def createpermutations():
 #endif
 
 def initializecell(thiscell):
-    if thiscell.generated != initMaze.mazeiteration:
+    if thiscell.generated != initEnv.mazeiteration:
         thiscell.g = inc.LARGE
         thiscell.rhs = inc.LARGE
         thiscell.searchtree = None
-        thiscell.generated = initMaze.mazeiteration
+        thiscell.generated = initEnv.mazeiteration
 
 
 def updatecell(thiscell):
@@ -183,7 +184,7 @@ def updatecell(thiscell):
         else:
             thiscell.key[0] = thiscell.g + heuristic(thiscell) + keymodifier
             thiscell.key[1] = thiscell.g
-        initHeap.insertheap(thiscell)
+        prioQ.insertheap(thiscell)
 
     elif thiscell.g > thiscell.rhs:
         if inc.TIEBREAKING:
@@ -193,10 +194,10 @@ def updatecell(thiscell):
         else:
             thiscell.key[0] = thiscell.rhs + heuristic(thiscell) + keymodifier
             thiscell.key[1] = thiscell.rhs
-        initHeap.insertheap(thiscell)
+        prioQ.insertheap(thiscell)
 
     else:
-	    initHeap.deleteheap(thiscell)
+	    prioQ.deleteheap(thiscell)
 
 
 def updatekey(thiscell):
@@ -243,7 +244,7 @@ def updaterhs(thiscell):
         for d in range(inc.DIRECTIONS):
         '''
         #endif
-        if thiscell.move[d] and thiscell.move[d].generated == initMaze.mazeiteration and thiscell.rhs > thiscell.move[d].g + 1:
+        if thiscell.move[d] and thiscell.move[d].generated == initEnv.mazeiteration and thiscell.rhs > thiscell.move[d].g + 1:
             thiscell.rhs = thiscell.move[d].g + 1
             thiscell.searchtree = thiscell.move[d]
 
@@ -258,8 +259,8 @@ def computeshortestpath():
     global permute
     global permutation
     global permutations
-    goaltmpcell = initMaze.Cell()
-    oldtmpcell  = initMaze.Cell()
+    goaltmpcell = initEnv.Cell()
+    oldtmpcell  = initEnv.Cell()
     '''
     #ifdef RANDOMIZESUCCS
         int dcase, dtemp
@@ -282,8 +283,8 @@ def computeshortestpath():
             goaltmpcell.key[0] = mazegoal.rhs + keymodifier
             goaltmpcell.key[1] = mazegoal.rhs
 
-    while initHeap.topheap() and (mazegoal.rhs > mazegoal.g or initHeap.keyless(initHeap.topheap(), goaltmpcell)):
-        tmpcell1 = initHeap.topheap()
+    while prioQ.topheap() and (mazegoal.rhs > mazegoal.g or prioQ.keyless(prioQ.topheap(), goaltmpcell)):
+        tmpcell1 = prioQ.topheap()
         oldtmpcell.key[0] = tmpcell1.key[0]
         oldtmpcell.key[1] = tmpcell1.key[1]
 
@@ -291,11 +292,11 @@ def computeshortestpath():
             oldtmpcell.key[2] = tmpcell1.key[2]
 
         updatekey(tmpcell1)
-        if initHeap.keyless(oldtmpcell, tmpcell1):
+        if prioQ.keyless(oldtmpcell, tmpcell1):
             updatecell(tmpcell1)
         elif tmpcell1.g > tmpcell1.rhs:
             tmpcell1.g = tmpcell1.rhs
-            initHeap.deleteheap(tmpcell1)
+            prioQ.deleteheap(tmpcell1)
 
             #ifdef RANDOMIZESUCCS
             dcase = random.randint(0, permutations-1)
@@ -401,15 +402,13 @@ keymodifier = 0
 for k in range(inc.RUNS):
     print '====================================================================='
     print 'maze', k
-    '''
-    #ifdef inc.RANDOMMAZE:
-        initMaze.newrandommaze()
-    #endif:
-    '''
-    initMaze.newdfsmaze(inc.WALLSTOREMOVE)
-    maze = initMaze.maze
-    mazestart   = initMaze.mazestart
-    mazegoal    = initMaze.mazegoal
+    
+    initEnv.newrandommaze()
+    # initEnv.newdfsmaze(inc.WALLSTOREMOVE)
+
+    maze 		= initEnv.maze
+    mazestart   = initEnv.mazestart
+    mazegoal    = initEnv.mazegoal
 
     if inc.DISPLAY:
         printactualmaze()
@@ -438,4 +437,3 @@ for k in range(inc.RUNS):
             while tmpcell:
                 updatemaze(tmpcell)
                 tmpcell = tmpcell.trace
-    # print initHeap.heap
