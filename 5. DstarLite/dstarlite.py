@@ -8,6 +8,8 @@ import rospy
 import inc
 import initEnv
 import prioQ
+import init
+from geometry_msgs.msg import PointStamped, Point
 from visualization_msgs.msg import Marker, MarkerArray
 
 def heuristic(cell):
@@ -15,75 +17,109 @@ def heuristic(cell):
     global mazegoal
     return max(abs(cell.y-mazegoal.y), abs(cell.x-mazegoal.x))
 
-def printactualmaze():
+def publishactualmaze():
     global maze
     global mazestart
     global mazegoal
 
-    print 'Actual maze: '
+    print 'Publishing actual maze...'
 
-    for x in range(inc.MAZEWIDTH+2):
-        print 'X',
-    print
+    sourcePoint  	= init.initPointMarkers()
+    goalPoint		= init.initPointMarkers()
+    sourcePoint.color.g	= 1.0
+    sourcePoint.color.a	= 1.0
+    goalPoint.color.r	= 1.0
+    goalPoint.color.a	= 1.0
+    sourcePoint.id	= 0
+    goalPoint.id	= 1
+
+    actualObstPoint = init.initObstMarkers()
+    
+    # sourcePoint
+    tempPoint = Point()
+    tempPoint.x = mazegoal.x
+    tempPoint.y = mazegoal.y
+    # tempPoint.z = mazegoal.z
+    sourcePoint.points.append(tempPoint)
+    sourcePoint.pose.position.x = mazegoal.x
+    sourcePoint.pose.position.y = mazegoal.y
+    # sourcePoint.pose.position.z = mazegoal.z
+
+    # goalPoint
+    tempPoint = Point()
+    tempPoint.x = mazestart.x
+    tempPoint.y = mazestart.y
+    # tempPoint.z = mazestart.z
+    goalPoint.points.append(tempPoint)
+    goalPoint.pose.position.x = mazestart.x
+    goalPoint.pose.position.y = mazestart.y
+    # goalPoint.pose.position.z = mazestart.z
+
     for y in range(inc.MAZEHEIGHT):
-        print 'X',
         for x in range(inc.MAZEWIDTH):
-            if y == mazegoal.y and x == mazegoal.x:
-                print 'R',
-            elif y == mazestart.y and x == mazestart.x:
-                print 'G',
-            elif maze[y][x].obstacle == 1:
-                print 'X',
-            else:
-                print ' ',
-        print 'X'
+            if maze[y][x].obstacle:
+                tempPoint = Point()
+                tempPoint.x = x
+                tempPoint.y = y
+                # tempPoint.z = z
+                actualObstPoint.points.append(tempPoint)
 
-    for x in range(inc.MAZEWIDTH+2):
-        print 'X',
-    print '\n--------------------------------------------------------------------\n'
+	pointPub.publish(sourcePoint)
+	pointPub.publish(goalPoint)
+	obstPub.publish(actualObstPoint)
 
 
-def printknownmaze():
+def publishknownmaze():
     global maze
     global mazestart
     global mazegoal
-    display = None
 
-    # rospy.logwarn('printknownmaze() called')
+    print 'Publishing known maze...'
 
-    if (display == None):
-        display = []
-        for y in range(inc.MAZEHEIGHT):
-            column = []
-            for x in range(inc.MAZEWIDTH):
-                column.append('')
-            display.append(column)
+    pathPoint 		= init.initPathMarkers()
+    currentPoint	= init.initPointMarkers()
+    currentPoint.color.r	= 1.0
+    currentPoint.color.g	= 1.0
+    currentPoint.id	= 3
+    knownObstPoint 	= init.initObstMarkers()
+    knownObstPoint.color.r  = 0.8
+    knownObstPoint.color.g  = 0.4
+    knownObstPoint.id  = 31
 
     for y in range(inc.MAZEHEIGHT):
         for x in range(inc.MAZEWIDTH):
-            display[y][x] = 'X'
             for d in range(inc.DIRECTIONS):
                 if maze[y][x].move[d]:
-                    display[y][x] = ' '
+                    break
+            else:
+            	tempPoint = Point()
+                tempPoint.x = x
+                tempPoint.y = y
+                # tempPoint.z = z
+                knownObstPoint.points.append(tempPoint)
 
     tmpcell = mazegoal
     while tmpcell != mazestart:
-        display[tmpcell.y][tmpcell.x] = '.'
+    	tempPoint = Point()
+    	tempPoint.x = tmpcell.x
+        tempPoint.y = tmpcell.y
+        # tempPoint.z = z
+        pathPoint.points.append(tempPoint)
         tmpcell = tmpcell.searchtree
-    display[mazestart.y][mazestart.x] = 'G'
-    display[mazegoal.y][mazegoal.x] = 'R'
+    
+    # display[mazestart.y][mazestart.x] = 'G'
+    tempPoint = Point()
+    tempPoint.x = mazegoal.x
+    tempPoint.y = mazegoal.y
+    # tempPoint.z = mazegoal.z
+    currentPoint.points.append(tempPoint)
+    currentPoint.pose.position.x = mazegoal.x
+    currentPoint.pose.position.y = mazegoal.y
+    # currentPoint.pose.position.z = mazegoal.z
 
-    for x in range(inc.MAZEWIDTH+2):
-	    print 'X',
-    print
-    for y in range(inc.MAZEHEIGHT):
-        print 'X',
-        for x in range(inc.MAZEWIDTH):
-            print display[y][x],
-        print 'X'
-    for x in range(inc.MAZEWIDTH+2):
-	    print 'X',
-    print '\n\n'
+    pathPub.publish(pathPoint)
+    pointPub.publish(currentPoint)
+    obstPub.publish(knownObstPoint)
 
 
 def initialize():
@@ -393,6 +429,9 @@ def updatemaze(robot):
 ################################################################################
 ################################################################################
 
+rospy.init_node('dstar_node', anonymous=True) # rosnode name
+(pathPub, pointPub, boundPub, obstPub) = init.initPublishers() # initialize publishers
+
 #ifdef RANDOMIZESUCCS
 createpermutations()
 #endif
@@ -411,7 +450,7 @@ for k in range(inc.RUNS):
     mazegoal    = initEnv.mazegoal
 
     if inc.DISPLAY:
-        printactualmaze()
+        publishactualmaze()
 
     initialize()
     lastcell = mazegoal
@@ -420,7 +459,8 @@ for k in range(inc.RUNS):
             print 'breaaaaak'
             break
         if inc.DISPLAY:
-            printknownmaze()
+            publishknownmaze()
+        rospy.sleep(2)
 
         mazegoal.trace = None
         while True:
@@ -437,3 +477,4 @@ for k in range(inc.RUNS):
             while tmpcell:
                 updatemaze(tmpcell)
                 tmpcell = tmpcell.trace
+    rospy.sleep(5)
