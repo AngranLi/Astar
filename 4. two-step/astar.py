@@ -167,7 +167,7 @@ def a_star_search(graph, obstDict, start, goal, heuristic_coeff):
             break
         # rospy.logfatal(goal)
 
-        for next in graph.neighbors(current, obstDict):
+        for next in graph.neighbors(current, obstDict.copy()):
             # if the neighbourPoint and the current are on a diagonal of cubic
             if abs(next[0]-current[0]) + abs(next[1]-current[1]) + abs(next[2]-current[2]) == 3:
                 new_cost = cost_so_far[current] + math.sqrt(3)*graph.cost(current, next)
@@ -365,8 +365,12 @@ def generateRefinedTrajectory(roughTrajectory):
     print 'closestPoint_id: ', closestPoint_id
     print 'closestPoint: ', (roughTrajectory[closestPoint_id][0] *scaleRatio,
                 roughTrajectory[closestPoint_id][1] *scaleRatio, roughTrajectory[closestPoint_id][2] *scaleRatio)
-    endPoint = (roughTrajectory[closestPoint_id+1][0] *scaleRatio, roughTrajectory[closestPoint_id+1][1] *scaleRatio,
-                roughTrajectory[closestPoint_id+1][2] *scaleRatio)
+    try:
+        endPoint = (roughTrajectory[closestPoint_id+2][0] *scaleRatio, roughTrajectory[closestPoint_id+2][1] *scaleRatio,
+                    roughTrajectory[closestPoint_id+2][2] *scaleRatio)
+    except IndexError:
+        endPoint = (roughTrajectory[-1][0] *scaleRatio, roughTrajectory[-1][1] *scaleRatio,
+                    roughTrajectory[-1][2] *scaleRatio)
 
     heap_percolation = 0
     print 'startPoint: ', startPoint
@@ -382,11 +386,18 @@ def generateRefinedTrajectory(roughTrajectory):
     for key in obstDict_fine:
         if obstDict_fine[key].conflict(startPoint):
             # set the startPoint to the nearest point outside the obstacle
-            dist = math.sqrt((startPoint[0]-obstDict_fine[key].centre_point[0])**2 + (startPoint[1]-obstDict_fine[key].centre_point[1])**2)
-            startPoint = tuple((int((startPoint[0]-obstDict_fine[key].centre_point[0]) * (obstDict_fine[key].radius/dist) + obstDict_fine[key].centre_point[0]+1),
-                            int((startPoint[1]-obstDict_fine[key].centre_point[1]) * (obstDict_fine[key].radius/dist) + obstDict_fine[key].centre_point[1]+1), startPoint[2]))
-            print 'changd startPoint: ', startPoint
-            break
+            try:
+                dist = math.sqrt((startPoint[0]-obstDict_fine[key].centre_point[0])**2 + (startPoint[1]-obstDict_fine[key].centre_point[1])**2)
+                startPoint = tuple((int((startPoint[0]-obstDict_fine[key].centre_point[0]) * (obstDict_fine[key].radius/dist) + obstDict_fine[key].centre_point[0]+1),
+                                int((startPoint[1]-obstDict_fine[key].centre_point[1]) * (obstDict_fine[key].radius/dist) + obstDict_fine[key].centre_point[1]+1), startPoint[2]))
+                print 'changd startPoint: ', startPoint
+                break
+            except ZeroDivisionError:
+                print 'startPoint x/y is ', startPoint[0], startPoint[1]
+                print 'obst centre point is ', obstDict_fine[key].centre_point[0], obstDict_fine[key].centre_point[1]
+                print 'obst radius is ', obstDict_fine[key].radius
+                print 'dist is ', dist
+                rospy.signal_shutdown()
 
         if obstDict_fine[key].conflict(endPoint):
             rospy.logfatal('Destination conflicts with obstacle!')
@@ -435,15 +446,15 @@ def generateRefinedTrajectory(roughTrajectory):
 ###############################################################################
 ###############################################################################
 ''' Set original environment '''
-mapBound_metre = (5, 5, 2.5)      # 3D boundary of the operating environment
+mapBound_metre = (5, 5, 3)      # 3D boundary of the operating environment
 scale_rough = 4
-scale_fine = 100
+scale_fine = 50
 scaleRatio = float(scale_fine/scale_rough)
 refineRatio = int((scale_fine/scale_rough)**(1.0/3))
 
 startPoint  = (0, 0, 0)
 endPoint    = (0, 0, 0)
-current_position  = (0.5, 0.5, 0.5)
+current_position  = (1, 1, 0.5)
 target_position   = (4.5, 4, 2.5)
 
 ''' Initialize ROS node and publishers '''
@@ -456,7 +467,7 @@ rate = rospy.Rate(10) # loop runs at x Hertz
 gotPath = False
 pathBlocked = True
 callback_obst_UAV1_flg = True
-# callback_obst_UGV1_flg = True
+callback_obst_UGV1_flg = True
 callback_obst_person1_flg = True
 callback_current_flg = True
 callback_target_flg = True
@@ -487,11 +498,11 @@ while not rospy.is_shutdown():
     while callback_obst_UAV1_flg:
         obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
         callback_obst_UAV1_flg = False
-    # while callback_obst_UGV1_flg:
-    #     obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
-    #     callback_obst_UGV1_flg = False
+    while callback_obst_UGV1_flg:
+        obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
+        callback_obst_UGV1_flg = False
     while callback_obst_person1_flg:
-        obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_person1)
+        obstSub = rospy.Subscriber('/UAV_4/pose', PoseStamped, callback_obst_person1)
         callback_obst_person1_flg = False
 
     # receive current position of UAV
