@@ -10,7 +10,7 @@ class Cell():
         self.searchtree = {}
         self.trace = {}
 
-        self.obstacle = 1
+        self.obstacle = 0
         self.x = 0
         self.y = 0
         self.z = 0
@@ -33,28 +33,36 @@ def preprocessmaze():
 
     goaly = inc.GOALY
     goalx = inc.GOALX
+    goalz = inc.GOALZ
     starty = inc.STARTY
     startx = inc.STARTX
+    startz = inc.STARTZ
 
     maze = []
-    for y in range(inc.MAZEHEIGHT):
-        column = []
-        for x in range(inc.MAZEWIDTH):
-            cell = Cell()
-            cell.x = x
-            cell.y = y
-            column.append(cell)
-        maze.append(column)
+    for x in range(inc.MAZELENGTH):
+        column1 = []
+        for y in range(inc.MAZEWIDTH):
+            column2 = []
+            for z in range(inc.MAZEHEIGHT):
+                cell = Cell()
+                cell.x = x
+                cell.y = y
+                cell.z = z
+                column2.append(cell)
+            column1.append(column2)
+        maze.append(column1)
 
-    for y in range(inc.MAZEHEIGHT):
-        for x in range(inc.MAZEWIDTH):
-            for d in range(inc.DIRECTIONS):
-                newy = y + inc.dy[d]
-                newx = x + inc.dx[d]
-                if (newy >= 0 and newy < inc.MAZEHEIGHT and newx >= 0 and newx < inc.MAZEWIDTH):
-                    maze[y][x].succ[d] = maze[newy][newx]
-                else:
-                    maze[y][x].succ[d] = None
+    for x in range(inc.MAZELENGTH):
+        for y in range(inc.MAZEWIDTH):
+            for z in range(inc.MAZEHEIGHT):
+                for d in range(inc.DIRECTIONS):
+                    newy = y + inc.dy[d]
+                    newx = x + inc.dx[d]
+                    newz = z + inc.dz[d]
+                    if (0<=newx<inc.MAZELENGTH and 0<=newy<inc.MAZEWIDTH and 0<=newz<inc.MAZEHEIGHT):
+                        maze[x][y][z].succ[d] = maze[newx][newy][newz]
+                    else:
+                        maze[x][y][z].succ[d] = None
     # #ifdef DEBUG
     #     assert(STARTY % 2 == 0);
     #     assert(STARTX % 2 == 0);
@@ -62,8 +70,8 @@ def preprocessmaze():
     #     assert(GOALX % 2 == 0);
     # #endif
 
-    mazestart   = maze[inc.STARTY][inc.STARTX]
-    mazegoal    = maze[inc.GOALY][inc.GOALX]
+    mazestart   = maze[inc.STARTY][inc.STARTX][inc.STARTZ]
+    mazegoal    = maze[inc.GOALY][inc.GOALX][inc.GOALZ]
     mazeiteration = 0
 
 
@@ -73,17 +81,18 @@ def postprocessmaze():
     global mazegoal
     tmpcell = Cell()
 
-    for y in range (inc.MAZEHEIGHT):
-        for x in range(inc.MAZEWIDTH):
-            for d1 in range(inc.DIRECTIONS):
-                maze[y][x].move[d1] = maze[y][x].succ[d1]
+    for x in range(inc.MAZELENGTH):
+        for y in range (inc.MAZEWIDTH):
+            for z in range (inc.MAZEHEIGHT):
+                for d1 in range(inc.DIRECTIONS):
+                    maze[x][y][z].move[d1] = maze[x][y][z].succ[d1]
 
     '''don't know the purpose of this section'''
     for d1 in range(inc.DIRECTIONS):
-        if (mazegoal.move[d1] is not None) and (mazegoal.move[d1].obstacle):
+        if mazegoal.move[d1] and mazegoal.move[d1].obstacle:
             tmpcell = mazegoal.move[d1]
             for d2 in range(inc.DIRECTIONS):
-                if (tmpcell.move[d2] is not None):
+                if tmpcell.move[d2]:
                     tmpcell.move[d2] = None
                     tmpcell.succ[d2].move[inc.reverse[d2]] = None
 
@@ -94,14 +103,28 @@ def newrandommaze():
     global mazegoal
     tmpcell = Cell()
 
+    print 'pre-processing maze...'
     preprocessmaze()
-    for y in range (inc.MAZEHEIGHT):
-        for x in range(inc.MAZEWIDTH):
-	           maze[y][x].obstacle = (random.randint(1,10000) < 10000 * inc.MAZEDENSITY)
+    
+    obstCentrePoint = []
+    obstLength = 20
+    obstWidth = 20
+    obstHeight = 10
+    for i in range(1):
+        obstCentrePoint.append((random.randint(10,90), random.randint(10,90), random.randint(5,55)))
+        print 'Obst centre point: ', obstCentrePoint[i]
+        for x in range(obstCentrePoint[i][0]-obstLength/2, obstCentrePoint[i][0]+obstLength/2):
+            for y in range(obstCentrePoint[i][1]-obstWidth/2, obstCentrePoint[i][1]+obstWidth/2):
+                for z in range(obstCentrePoint[i][2]-obstHeight/2, obstCentrePoint[i][2]+obstHeight/2):
+                    maze[x][y][z].obstacle = 1
+    # for y in range (inc.MAZEWIDTH):
+    #     for x in range(inc.MAZELENGTH):
+	   #         maze[y][x].obstacle = (random.randint(1,10000) < 10000 * inc.MAZEDENSITY)
     mazegoal.obstacle = 0
     # if inc.STARTCANBEBLOCKED:
     #     mazestart.obstacle = 0
 
+    print 'post-processing maze...'
     postprocessmaze()
 
 
@@ -116,12 +139,12 @@ def newdfsmaze(wallstoremove):
     preprocessmaze()
 
     #ifdef DEBUG
+        assert(MAZELENGTH % 2 == 1);
         assert(MAZEWIDTH % 2 == 1);
-        assert(MAZEHEIGHT % 2 == 1);
     #endif
 
-    for y in range (inc.MAZEHEIGHT):
-        for x in range(inc.MAZEWIDTH):
+    for y in range (inc.MAZEWIDTH):
+        for x in range(inc.MAZELENGTH):
     	    maze[y][x].obstacle = 1
     	    maze[y][x].dfsx = 0
     	    maze[y][x].dfsy = 0
@@ -169,8 +192,8 @@ def newdfsmaze(wallstoremove):
             y = newy
 
     while wallstoremove > 0:
-    	newx = random.randint(0, inc.MAZEWIDTH-1)
-    	newy = random.randint(0, inc.MAZEHEIGHT-1)
+    	newx = random.randint(0, inc.MAZELENGTH-1)
+    	newy = random.randint(0, inc.MAZEWIDTH-1)
     	if (maze[newy][newx].obstacle):
     	    maze[newy][newx].obstacle = 0
     	    wallstoremove -= 1

@@ -15,7 +15,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 def heuristic(cell):
     global maze
     global mazegoal
-    return max(abs(cell.y-mazegoal.y), abs(cell.x-mazegoal.x))
+    return abs(cell.x-mazegoal.x) + abs(cell.y-mazegoal.y) + abs(cell.z-mazegoal.z)
 
 def publishactualmaze():
     global maze
@@ -39,30 +39,31 @@ def publishactualmaze():
     tempPoint = Point()
     tempPoint.x = mazegoal.x
     tempPoint.y = mazegoal.y
-    # tempPoint.z = mazegoal.z
+    tempPoint.z = mazegoal.z
     sourcePoint.points.append(tempPoint)
     sourcePoint.pose.position.x = mazegoal.x
     sourcePoint.pose.position.y = mazegoal.y
-    # sourcePoint.pose.position.z = mazegoal.z
+    sourcePoint.pose.position.z = mazegoal.z
 
     # goalPoint
     tempPoint = Point()
     tempPoint.x = mazestart.x
     tempPoint.y = mazestart.y
-    # tempPoint.z = mazestart.z
+    tempPoint.z = mazestart.z
     goalPoint.points.append(tempPoint)
     goalPoint.pose.position.x = mazestart.x
     goalPoint.pose.position.y = mazestart.y
-    # goalPoint.pose.position.z = mazestart.z
+    goalPoint.pose.position.z = mazestart.z
 
-    for y in range(inc.MAZEHEIGHT):
-        for x in range(inc.MAZEWIDTH):
-            if maze[y][x].obstacle:
-                tempPoint = Point()
-                tempPoint.x = x
-                tempPoint.y = y
-                # tempPoint.z = z
-                actualObstPoint.points.append(tempPoint)
+    for x in range(inc.MAZELENGTH):
+        for y in range(inc.MAZEWIDTH):
+            for z in range(inc.MAZEHEIGHT):
+                if maze[x][y][z].obstacle:
+                    tempPoint = Point()
+                    tempPoint.x = x
+                    tempPoint.y = y
+                    tempPoint.z = z
+                    actualObstPoint.points.append(tempPoint)
 
 	pointPub.publish(sourcePoint)
 	pointPub.publish(goalPoint)
@@ -86,24 +87,25 @@ def publishknownmaze():
     knownObstPoint.color.g  = 0.4
     knownObstPoint.id  = 31
 
-    for y in range(inc.MAZEHEIGHT):
-        for x in range(inc.MAZEWIDTH):
-            for d in range(inc.DIRECTIONS):
-                if maze[y][x].move[d]:
-                    break
-            else:
-            	tempPoint = Point()
-                tempPoint.x = x
-                tempPoint.y = y
-                # tempPoint.z = z
-                knownObstPoint.points.append(tempPoint)
+    for x in range(inc.MAZELENGTH):   
+        for y in range(inc.MAZEWIDTH):
+            for z in range(inc.MAZEHEIGHT):
+                for d in range(inc.DIRECTIONS):
+                    if maze[x][y][z].move[d]:
+                        break
+                    else:
+                    	tempPoint = Point()
+                        tempPoint.x = x
+                        tempPoint.y = y
+                        tempPoint.z = z
+                        knownObstPoint.points.append(tempPoint)
 
     tmpcell = mazegoal
     while tmpcell != mazestart:
     	tempPoint = Point()
     	tempPoint.x = tmpcell.x
         tempPoint.y = tmpcell.y
-        # tempPoint.z = z
+        tempPoint.z = tmpcell.z
         pathPoint.points.append(tempPoint)
         tmpcell = tmpcell.searchtree
     
@@ -111,11 +113,11 @@ def publishknownmaze():
     tempPoint = Point()
     tempPoint.x = mazegoal.x
     tempPoint.y = mazegoal.y
-    # tempPoint.z = mazegoal.z
+    tempPoint.z = mazegoal.z
     currentPoint.points.append(tempPoint)
     currentPoint.pose.position.x = mazegoal.x
     currentPoint.pose.position.y = mazegoal.y
-    # currentPoint.pose.position.z = mazegoal.z
+    currentPoint.pose.position.z = mazegoal.z
 
     pathPub.publish(pathPoint)
     pointPub.publish(currentPoint)
@@ -150,7 +152,7 @@ def initialize():
     mazegoal.generated = initEnv.mazeiteration
 
 #if RANDOMIZESUCCS:
-
+'''
 def swappermutations(n):
     global permute
     global permutation
@@ -171,13 +173,21 @@ def swappermutations(n):
         for i in range(inc.DIRECTIONS):
             permutation[i][permutations] = permute[i]
         permutations = permutations + 1
-
+'''
 
 def createpermutations():
-    global permute
+    # global permute
     global permutation
     global permutations
 
+    permutations = inc.DIRECTIONS
+    permutation = []
+    for i in range(inc.DIRECTIONS):
+        column = []
+        for i in range(inc.DIRECTIONS):
+            column.append(i)
+        permutation.append(column)
+    '''
     # int permute[DIRECTIONS]
     permute = []
     for i in range(inc.DIRECTIONS):
@@ -191,6 +201,7 @@ def createpermutations():
     for i in range(inc.DIRECTIONS):
         permute[i] = i
         row = []
+        print 'permutations: \n', permutations
         for m in range(permutations):
             row.append(0)
         permutation.append(row)
@@ -198,6 +209,7 @@ def createpermutations():
 
     permutations = 0
     swappermutations(inc.DIRECTIONS-1)
+    '''
 
 #endif
 
@@ -444,6 +456,7 @@ for k in range(inc.RUNS):
     
     initEnv.newrandommaze()
     # initEnv.newdfsmaze(inc.WALLSTOREMOVE)
+    print 'maze created'
 
     maze 		= initEnv.maze
     mazestart   = initEnv.mazestart
@@ -460,7 +473,7 @@ for k in range(inc.RUNS):
             break
         if inc.DISPLAY:
             publishknownmaze()
-        rospy.sleep(2)
+        rospy.sleep(1)
 
         mazegoal.trace = None
         while True:
