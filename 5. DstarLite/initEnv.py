@@ -117,8 +117,16 @@ def newrandommaze():
         obstCentrePoint.append((random.randint(int(0.1*inc.MAZELENGTH),int(0.8*inc.MAZELENGTH)), random.randint(int(0.1*inc.MAZEWIDTH),int(0.8*inc.MAZEWIDTH)), random.randint(int(0.1*inc.MAZEHEIGHT),int(0.8*inc.MAZEHEIGHT))))
         for x in range(obstCentrePoint[i][0]-obstLength/2, obstCentrePoint[i][0]+obstLength/2):
             for y in range(obstCentrePoint[i][1]-obstWidth/2, obstCentrePoint[i][1]+obstWidth/2):
-                for z in range(obstCentrePoint[i][2]-obstHeight/2, obstCentrePoint[i][2]+obstHeight/2):
-                    maze[x][y][z].obstacle = 1
+                maze[x][y][obstCentrePoint[i][2]-obstHeight/2].obstacle = 1
+                maze[x][y][obstCentrePoint[i][2]+obstHeight/2].obstacle = 1
+        for x in range(obstCentrePoint[i][0]-obstLength/2, obstCentrePoint[i][0]+obstLength/2): 
+            for z in range(obstCentrePoint[i][2]-obstHeight/2, obstCentrePoint[i][2]+obstHeight/2):
+                maze[x][obstCentrePoint[i][1]-obstWidth/2][z].obstacle = 1
+                maze[x][obstCentrePoint[i][1]+obstWidth/2][z].obstacle = 1
+        for y in range(obstCentrePoint[i][1]-obstWidth/2, obstCentrePoint[i][1]+obstWidth/2):
+            for z in range(obstCentrePoint[i][2]-obstHeight/2, obstCentrePoint[i][2]+obstHeight/2):
+                maze[obstCentrePoint[i][0]-obstLength/2][y][z].obstacle = 1
+                maze[obstCentrePoint[i][0]+obstLength/2][y][z].obstacle = 1
     # for y in range (inc.MAZEWIDTH):
     #     for x in range(inc.MAZELENGTH):
 	   #         maze[y][x].obstacle = (random.randint(1,10000) < 10000 * inc.MAZEDENSITY)
