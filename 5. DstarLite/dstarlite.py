@@ -152,7 +152,7 @@ def initialize():
     mazegoal.generated = initEnv.mazeiteration
 
 #if RANDOMIZESUCCS:
-'''
+
 def swappermutations(n):
     global permute
     global permutation
@@ -173,13 +173,14 @@ def swappermutations(n):
         for i in range(inc.DIRECTIONS):
             permutation[i][permutations] = permute[i]
         permutations = permutations + 1
-'''
+
 
 def createpermutations():
-    # global permute
+    global permute
     global permutation
     global permutations
 
+    '''
     permutations = inc.DIRECTIONS
     permutation = []
     for i in range(inc.DIRECTIONS):
@@ -209,7 +210,7 @@ def createpermutations():
 
     permutations = 0
     swappermutations(inc.DIRECTIONS-1)
-    '''
+
 
 #endif
 
@@ -343,11 +344,11 @@ def computeshortestpath():
 
         updatekey(tmpcell1)
         if prioQ.keyless(oldtmpcell, tmpcell1):
-            print 'in the if branch'
+            # print 'in the if branch'
             updatecell(tmpcell1)
         elif tmpcell1.g > tmpcell1.rhs:
-            print 'in the elif branch'
-            print 'mazegoal.rhs(elif start): ', mazegoal.rhs
+            # print 'in the elif branch'
+            # print 'mazegoal.rhs(elif start): ', mazegoal.rhs
             tmpcell1.g = tmpcell1.rhs
             prioQ.deleteheap(tmpcell1)
 
@@ -365,13 +366,13 @@ def computeshortestpath():
                     initializecell(tmpcell2)
                     if tmpcell2 != mazestart and tmpcell2.rhs > tmpcell1.g + 1:
                         tmpcell2.rhs = tmpcell1.g + 1
-                        print 'tmpcell2 searchtree assigned!'
+                        # print 'tmpcell2 searchtree assigned!'
                         tmpcell2.searchtree = tmpcell1
                         updatecell(tmpcell2)
-            print 'tmpcell2.rhs(elif end): ', tmpcell2.rhs
-            print 'mazegoal.rhs(elif end): ', mazegoal.rhs
+            # print 'tmpcell2.rhs(elif end): ', tmpcell2.rhs
+            # print 'mazegoal.rhs(elif end): ', mazegoal.rhs
         else:
-            print 'in the else branch'
+            # print 'in the else branch'
             tmpcell1.g = inc.LARGE
             updatecell(tmpcell1)
 

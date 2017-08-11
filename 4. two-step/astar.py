@@ -223,11 +223,11 @@ def callback_obst_UGV1(centre_point):
 
     obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
-                init.gridalize(0.5 *1.2, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UGV')
+                init.gridalize(0.5 *1.2, scale_rough), init.gridalize(1.5, scale_rough), mapBound_grid_rough[2], 'obst_UGV')
 
     obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
-                init.gridalize(0.5, scale_fine), init.gridalize(2, scale_fine), mapBound_grid_fine[2], 'obst_UGV')
+                init.gridalize(0.5, scale_fine), init.gridalize(1.5, scale_fine), mapBound_grid_fine[2], 'obst_UGV')
 
     obstDict_rough['obst_UGV1']  = obstacle_rough
     obstDict_fine['obst_UGV1']   = obstacle_fine
@@ -390,7 +390,8 @@ def generateRefinedTrajectory(roughTrajectory):
                 dist = math.sqrt((startPoint[0]-obstDict_fine[key].centre_point[0])**2 + (startPoint[1]-obstDict_fine[key].centre_point[1])**2)
                 startPoint = tuple((int((startPoint[0]-obstDict_fine[key].centre_point[0]) * (obstDict_fine[key].radius/dist) + obstDict_fine[key].centre_point[0]+1),
                                 int((startPoint[1]-obstDict_fine[key].centre_point[1]) * (obstDict_fine[key].radius/dist) + obstDict_fine[key].centre_point[1]+1), startPoint[2]))
-                print 'changd startPoint: ', startPoint
+                rospy.logfatal('changd startPoint!')
+                print startPoint
                 break
             except ZeroDivisionError:
                 print 'startPoint x/y is ', startPoint[0], startPoint[1]
@@ -455,7 +456,7 @@ refineRatio = int((scale_fine/scale_rough)**(1.0/3))
 startPoint  = (0, 0, 0)
 endPoint    = (0, 0, 0)
 current_position  = (1, 1, 0.5)
-target_position   = (4.5, 4, 2.5)
+target_position   = (4.5, 4, 2.0)
 
 ''' Initialize ROS node and publishers '''
 rospy.init_node('astar_node', anonymous=True) # rosnode name
