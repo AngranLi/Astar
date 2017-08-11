@@ -34,7 +34,7 @@ def publishactualmaze():
     goalPoint.id	= 1
 
     actualObstPoint = init.initObstMarkers()
-    
+
     # sourcePoint
     tempPoint = Point()
     tempPoint.x = mazegoal.x
@@ -87,7 +87,7 @@ def publishknownmaze():
     knownObstPoint.color.g  = 0.4
     knownObstPoint.id  = 31
 
-    for x in range(inc.MAZELENGTH):   
+    for x in range(inc.MAZELENGTH):
         for y in range(inc.MAZEWIDTH):
             for z in range(inc.MAZEHEIGHT):
                 for d in range(inc.DIRECTIONS):
@@ -108,7 +108,7 @@ def publishknownmaze():
         tempPoint.z = tmpcell.z
         pathPoint.points.append(tempPoint)
         tmpcell = tmpcell.searchtree
-    
+
     # display[mazestart.y][mazestart.x] = 'G'
     tempPoint = Point()
     tempPoint.x = mazegoal.x
@@ -314,6 +314,8 @@ def computeshortestpath():
         int dcase, dtemp
     #endif
     '''
+
+    print 'computing shortest path...'
     if inc.TIEBREAKING:
         if mazegoal.g < mazegoal.rhs:
             goaltmpcell.key[0] = mazegoal.g + keymodifier
@@ -341,8 +343,11 @@ def computeshortestpath():
 
         updatekey(tmpcell1)
         if prioQ.keyless(oldtmpcell, tmpcell1):
+            print 'in the if branch'
             updatecell(tmpcell1)
         elif tmpcell1.g > tmpcell1.rhs:
+            print 'in the elif branch'
+            print 'mazegoal.rhs(elif start): ', mazegoal.rhs
             tmpcell1.g = tmpcell1.rhs
             prioQ.deleteheap(tmpcell1)
 
@@ -360,10 +365,13 @@ def computeshortestpath():
                     initializecell(tmpcell2)
                     if tmpcell2 != mazestart and tmpcell2.rhs > tmpcell1.g + 1:
                         tmpcell2.rhs = tmpcell1.g + 1
-                        # print 'tmpcell2 searchtree assigned!'
+                        print 'tmpcell2 searchtree assigned!'
                         tmpcell2.searchtree = tmpcell1
                         updatecell(tmpcell2)
+            print 'tmpcell2.rhs(elif end): ', tmpcell2.rhs
+            print 'mazegoal.rhs(elif end): ', mazegoal.rhs
         else:
+            print 'in the else branch'
             tmpcell1.g = inc.LARGE
             updatecell(tmpcell1)
 
@@ -418,10 +426,10 @@ def updatemaze(robot):
     dcase = random.randint(0, permutations-1)
     for dtemp in range(inc.DIRECTIONS):
         d1 = permutation[dtemp][dcase]
-        '''
+
         #else
-        for d1 in range(inc.DIRECTIONS):
-        '''
+        # for d1 in range(inc.DIRECTIONS):
+
         #endif
         if robot.move[d1] and robot.move[d1].obstacle:
             tmpcell = robot.move[d1]
@@ -453,10 +461,9 @@ keymodifier = 0
 for k in range(inc.RUNS):
     print '====================================================================='
     print 'maze', k
-    
+
     initEnv.newrandommaze()
     # initEnv.newdfsmaze(inc.WALLSTOREMOVE)
-    print 'maze created'
 
     maze 		= initEnv.maze
     mazestart   = initEnv.mazestart

@@ -38,6 +38,7 @@ def preprocessmaze():
     startx = inc.STARTX
     startz = inc.STARTZ
 
+    print 'initialising environment...'
     maze = []
     for x in range(inc.MAZELENGTH):
         column1 = []
@@ -52,6 +53,7 @@ def preprocessmaze():
             column1.append(column2)
         maze.append(column1)
 
+    print 'adding successors...'
     for x in range(inc.MAZELENGTH):
         for y in range(inc.MAZEWIDTH):
             for z in range(inc.MAZEHEIGHT):
@@ -105,14 +107,14 @@ def newrandommaze():
 
     print 'pre-processing maze...'
     preprocessmaze()
-    
+
+    print 'adding obstacles...'
     obstCentrePoint = []
-    obstLength = 20
-    obstWidth = 20
-    obstHeight = 10
+    obstLength = 10
+    obstWidth = 10
+    obstHeight = 5
     for i in range(1):
-        obstCentrePoint.append((random.randint(10,90), random.randint(10,90), random.randint(5,55)))
-        print 'Obst centre point: ', obstCentrePoint[i]
+        obstCentrePoint.append((random.randint(int(0.1*inc.MAZELENGTH),int(0.8*inc.MAZELENGTH)), random.randint(int(0.1*inc.MAZEWIDTH),int(0.8*inc.MAZEWIDTH)), random.randint(int(0.1*inc.MAZEHEIGHT),int(0.8*inc.MAZEHEIGHT))))
         for x in range(obstCentrePoint[i][0]-obstLength/2, obstCentrePoint[i][0]+obstLength/2):
             for y in range(obstCentrePoint[i][1]-obstWidth/2, obstCentrePoint[i][1]+obstWidth/2):
                 for z in range(obstCentrePoint[i][2]-obstHeight/2, obstCentrePoint[i][2]+obstHeight/2):
