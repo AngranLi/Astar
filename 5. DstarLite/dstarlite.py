@@ -3,6 +3,7 @@
 /* Note: this version of D* Lite is optimized for grids                  */
 /* It assumes, for example, that no cell can be a successor of itself.   */
 '''
+import math
 import random
 import rospy
 import inc
@@ -77,15 +78,15 @@ def publishknownmaze():
 
     print 'Publishing known maze...'
 
-    pathPoint 		= init.initPathMarkers()
-    currentPoint	= init.initPointMarkers()
-    currentPoint.color.r	= 1.0
-    currentPoint.color.g	= 1.0
+    pathPoint = init.initPathMarkers()
+    currentPoint = init.initPointMarkers()
+    currentPoint.color.r = 1.0
+    currentPoint.color.g = 1.0
     currentPoint.id	= 3
-    knownObstPoint 	= init.initObstMarkers()
-    knownObstPoint.color.r  = 0.8
-    knownObstPoint.color.g  = 0.4
-    knownObstPoint.id  = 31
+    knownObstPoint = init.initObstMarkers()
+    knownObstPoint.color.r = 0.8
+    knownObstPoint.color.g = 0.4
+    knownObstPoint.id = 31
 
     for x in range(inc.MAZELENGTH):
         for y in range(inc.MAZEWIDTH):
@@ -93,12 +94,13 @@ def publishknownmaze():
                 for d in range(inc.DIRECTIONS):
                     if maze[x][y][z].move[d]:
                         break
-                    else:
+                    elif maze[x][y][z].obstacle:
                     	tempPoint = Point()
                         tempPoint.x = x
                         tempPoint.y = y
                         tempPoint.z = z
                         knownObstPoint.points.append(tempPoint)
+
 
     tmpcell = mazegoal
     while tmpcell != mazestart:
@@ -109,7 +111,6 @@ def publishknownmaze():
         pathPoint.points.append(tempPoint)
         tmpcell = tmpcell.searchtree
 
-    # display[mazestart.y][mazestart.x] = 'G'
     tempPoint = Point()
     tempPoint.x = mazegoal.x
     tempPoint.y = mazegoal.y
@@ -180,15 +181,6 @@ def createpermutations():
     global permutation
     global permutations
 
-    '''
-    permutations = inc.DIRECTIONS
-    permutation = []
-    for i in range(inc.DIRECTIONS):
-        column = []
-        for i in range(inc.DIRECTIONS):
-            column.append(i)
-        permutation.append(column)
-    '''
     # int permute[DIRECTIONS]
     permute = []
     for i in range(inc.DIRECTIONS):
@@ -202,7 +194,6 @@ def createpermutations():
     for i in range(inc.DIRECTIONS):
         permute[i] = i
         row = []
-        print 'permutations: \n', permutations
         for m in range(permutations):
             row.append(0)
         permutation.append(row)
@@ -210,7 +201,6 @@ def createpermutations():
 
     permutations = 0
     swappermutations(inc.DIRECTIONS-1)
-
 
 #endif
 
@@ -276,11 +266,6 @@ def updaterhs(thiscell):
     global permutation
     global permutations
 
-    '''
-    if RANDOMIZESUCCS:
-        int dcase, dtemp
-    #endif
-    '''
     thiscell.rhs = inc.LARGE
     thiscell.searchtree = None
 
@@ -310,13 +295,8 @@ def computeshortestpath():
     global permutations
     goaltmpcell = initEnv.Cell()
     oldtmpcell  = initEnv.Cell()
-    '''
-    #ifdef RANDOMIZESUCCS
-        int dcase, dtemp
-    #endif
-    '''
 
-    print 'computing shortest path...'
+    # print 'computing shortest path...'
     if inc.TIEBREAKING:
         if mazegoal.g < mazegoal.rhs:
             goaltmpcell.key[0] = mazegoal.g + keymodifier
@@ -417,20 +397,13 @@ def updatemaze(robot):
     global permute
     global permutation
     global permutations
-    '''
-    #ifdef RANDOMIZESUCCS
-        int dcase, dtemp
-    #endif
-    '''
 
     #ifdef RANDOMIZESUCCS
     dcase = random.randint(0, permutations-1)
     for dtemp in range(inc.DIRECTIONS):
         d1 = permutation[dtemp][dcase]
-
         #else
         # for d1 in range(inc.DIRECTIONS):
-
         #endif
         if robot.move[d1] and robot.move[d1].obstacle:
             tmpcell = robot.move[d1]
@@ -470,8 +443,9 @@ for k in range(inc.RUNS):
     mazestart   = initEnv.mazestart
     mazegoal    = initEnv.mazegoal
 
-    if inc.DISPLAY:
-        publishactualmaze()
+    # print 'Start point: '
+    # print 'Destination: '
+    publishactualmaze()
 
     initialize()
     lastcell = mazegoal
@@ -479,14 +453,16 @@ for k in range(inc.RUNS):
         if computeshortestpath():
             print 'breaaaaak'
             break
-        if inc.DISPLAY:
-            publishknownmaze()
-        rospy.sleep(1)
+
+        publishknownmaze()
+        rospy.sleep(0.1)
 
         mazegoal.trace = None
         while True:
+            print 'pos. of mazegoal 1: ', (mazegoal.x, mazegoal.y, mazegoal.z)
             mazegoal.searchtree.trace = mazegoal
-            mazegoal = mazegoal.searchtree
+            mazegoal = maze[mazegoal.searchtree.x][mazegoal.searchtree.y][mazegoal.searchtree.z] # mazegoal.searchtree # 
+            # print 'pos. of mazegoal 2: ', (mazegoal.x, mazegoal.y, mazegoal.z)
             if mazestart == mazegoal or mazegoal.searchtree.obstacle:
                 break
 
@@ -498,4 +474,6 @@ for k in range(inc.RUNS):
             while tmpcell:
                 updatemaze(tmpcell)
                 tmpcell = tmpcell.trace
-    rospy.sleep(5)
+
+    print 'Finished.'
+    rospy.sleep(3)
