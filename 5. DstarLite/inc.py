@@ -20,9 +20,9 @@ GOALX = random.randint(int(0.8*MAZELENGTH),MAZELENGTH-1)    # x coordinate of th
 GOALY = random.randint(int(0.8*MAZEWIDTH), MAZEWIDTH-1)     # y coordinate of the goal  cell
 GOALZ = random.randint(int(0.8*MAZEHEIGHT),MAZEHEIGHT-1)
 '''
-STARTX = random.randint(int(0.8*MAZELENGTH),MAZELENGTH-1)
-STARTY = random.randint(int(0.8*MAZEWIDTH), MAZEWIDTH-1)
-STARTZ = random.randint(int(0.8*MAZEHEIGHT),MAZEHEIGHT-1)
+STARTX = 40 # random.randint(int(0.8*MAZELENGTH),MAZELENGTH-1)
+STARTY = 40 # random.randint(int(0.8*MAZEWIDTH), MAZEWIDTH-1)
+STARTZ = 10 # random.randint(int(0.8*MAZEHEIGHT),MAZEHEIGHT-1)
 GOALX = random.randint(0,5)
 GOALY = random.randint(0,5)
 GOALZ = random.randint(0,5)

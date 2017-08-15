@@ -10,7 +10,7 @@ import inc
 import initEnv
 import prioQ
 import init
-from geometry_msgs.msg import PointStamped, Point
+from geometry_msgs.msg import PointStamped, Point, PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
 
 def heuristic(cell):
@@ -24,6 +24,7 @@ def publishactualmaze():
     global mazegoal
 
     print 'Publishing actual maze...'
+    print 'mazegoal pos. ', mazegoal.x, mazegoal.y, mazegoal.z
 
     sourcePoint  	= init.initPointMarkers()
     goalPoint		= init.initPointMarkers()
@@ -75,14 +76,11 @@ def publishknownmaze():
     global maze
     global mazestart
     global mazegoal
+    global pathPoint
 
     print 'Publishing known maze...'
 
     pathPoint = init.initPathMarkers()
-    currentPoint = init.initPointMarkers()
-    currentPoint.color.r = 1.0
-    currentPoint.color.g = 1.0
-    currentPoint.id	= 3
     knownObstPoint = init.initObstMarkers()
     knownObstPoint.color.r = 0.8
     knownObstPoint.color.g = 0.4
@@ -101,7 +99,6 @@ def publishknownmaze():
                         tempPoint.z = z
                         knownObstPoint.points.append(tempPoint)
 
-
     tmpcell = mazegoal
     while tmpcell != mazestart:
     	tempPoint = Point()
@@ -110,18 +107,13 @@ def publishknownmaze():
         tempPoint.z = tmpcell.z
         pathPoint.points.append(tempPoint)
         tmpcell = tmpcell.searchtree
-
     tempPoint = Point()
-    tempPoint.x = mazegoal.x
-    tempPoint.y = mazegoal.y
-    tempPoint.z = mazegoal.z
-    currentPoint.points.append(tempPoint)
-    currentPoint.pose.position.x = mazegoal.x
-    currentPoint.pose.position.y = mazegoal.y
-    currentPoint.pose.position.z = mazegoal.z
+    tempPoint.x = mazestart.x
+    tempPoint.y = mazestart.y
+    tempPoint.z = mazestart.z
+    pathPoint.points.append(tempPoint)
 
     pathPub.publish(pathPoint)
-    pointPub.publish(currentPoint)
     obstPub.publish(knownObstPoint)
 
 
@@ -420,11 +412,76 @@ def updatemaze(robot):
                 updatecell(tmpcell)
 
 
+def callback_current(data):  # data contains the current point
+    # rospy.loginfo((data.pose.position.x, data.pose.position.y, data.pose.position.z))
+    global current_position
+    global currentPoint
+    current_position = (data.pose.position.x, data.pose.position.y, data.pose.position.z)
+
+    temptuple = tuple(init.gridalize(current_position, scale))
+    tempPoint = Point()
+    tempPoint.x = temptuple[0]
+    tempPoint.y = temptuple[1]
+    tempPoint.z = temptuple[2]
+    del currentPoint.points[:]
+    currentPoint.points.append(tempPoint)
+    currentPoint.pose.position.x = temptuple[0]
+    currentPoint.pose.position.y = temptuple[1]
+    currentPoint.pose.position.z = temptuple[2]
+    pointPub.publish(currentPoint)
+
+    # print 'currentPoint pos. 3', currentPoint.points[0].x, currentPoint.points[0].y, currentPoint.points[0].z
+
+    callback_current_flg = True
+
 ################################################################################
 ################################################################################
 
+''' Set original environment '''
+mapBound_metre = (5, 5, 3)      # 3D boundary of the operating environment
+scale = 10
+
+startPoint  = (0, 0, 0)
+endPoint    = (0, 0, 0)
+current_position  = (1, 1, 0.5)
+target_position   = (4.5, 4, 2.0)
+
+''' Initialize ROS node and publishers '''
 rospy.init_node('dstar_node', anonymous=True) # rosnode name
 (pathPub, pointPub, boundPub, obstPub) = init.initPublishers() # initialize publishers
+rospy.sleep(0.3) # it takes time to initialize publishers
+rate = rospy.Rate(10) # loop runs at x Hertz
+
+''' Set original value of flags '''
+# gotPath = False
+# pathBlocked = True
+# callback_obst_UAV1_flg = True
+# callback_obst_UGV1_flg = True
+# callback_obst_person1_flg = True
+callback_current_flg = True
+# callback_target_flg = True
+
+''' Intialize markers '''
+currentPoint = init.initPointMarkers()
+currentPoint.color.r = 1.0
+currentPoint.color.g = 1.0
+currentPoint.id	= 3
+temptuple = tuple(init.gridalize(current_position, scale))
+tempPoint = Point()
+tempPoint.x = temptuple[0]
+tempPoint.y = temptuple[1]
+tempPoint.z = temptuple[2]
+currentPoint.points.append(tempPoint)
+currentPoint.pose.position.x = temptuple[0]
+currentPoint.pose.position.y = temptuple[1]
+currentPoint.pose.position.z = temptuple[2]
+
+pathPoint = init.initPathMarkers()
+knownObstPoint = init.initObstMarkers()
+knownObstPoint.color.r = 0.8
+knownObstPoint.color.g = 0.4
+knownObstPoint.id = 31
+
 
 #ifdef RANDOMIZESUCCS
 createpermutations()
@@ -436,12 +493,24 @@ for k in range(inc.RUNS):
     print '====================================================================='
     print 'maze', k
 
+
     initEnv.newrandommaze()
+
+    rospy.signal_shutdown()
     # initEnv.newdfsmaze(inc.WALLSTOREMOVE)
+
+    # receive current position of UAV
+    while callback_current_flg:
+        ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
+        callback_current_flg = False
+    rospy.sleep(1)
+
+    print 'currentPoint pos. 1', currentPoint.points[0].x, currentPoint.points[0].y, currentPoint.points[0].z
 
     maze 		= initEnv.maze
     mazestart   = initEnv.mazestart
-    mazegoal    = initEnv.mazegoal
+    mazegoal    = maze[currentPoint.points[0].x][currentPoint.points[0].y][currentPoint.points[0].z] # initEnv.mazegoal
+    print 'currentPoint pos. 2', currentPoint.points[0].x, currentPoint.points[0].y, currentPoint.points[0].z
 
     # print 'Start point: '
     # print 'Destination: '
@@ -459,11 +528,33 @@ for k in range(inc.RUNS):
 
         mazegoal.trace = None
         while True:
-            print 'pos. of mazegoal 1: ', (mazegoal.x, mazegoal.y, mazegoal.z)
+            # receive current position of UAV
+            while callback_current_flg:
+                ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
+                callback_current_flg = False
+
+            dist_min = 200
+            closestPoint_id = 0
+            # print 'pathPoint.points: \n', pathPoint.points
+            # print type(pathPoint.points), len(pathPoint.points)
+            # print pathPoint.points[3].x
+            try:
+                for i in range(len(pathPoint.points)):
+                    dist = abs(pathPoint.points[i].x-currentPoint.points[0].x) + abs(pathPoint.points[i].y-currentPoint.points[0].y) + abs(pathPoint.points[i].z-currentPoint.points[0].z)
+                    if dist < dist_min:
+                        dist_min = dist
+                        closestPoint_id = i
+            except IndexError:
+                print 'i is ', i
+                print 'len(pathPoint.points): ', len(pathPoint.points)
+            closestPoint = (pathPoint.points[closestPoint_id].x, pathPoint.points[closestPoint_id].y, pathPoint.points[closestPoint_id].z)
+            # print 'closestPoint: ', closestPoint
             mazegoal.searchtree.trace = mazegoal
-            mazegoal = maze[mazegoal.searchtree.x][mazegoal.searchtree.y][mazegoal.searchtree.z] # mazegoal.searchtree # 
-            # print 'pos. of mazegoal 2: ', (mazegoal.x, mazegoal.y, mazegoal.z)
+            mazegoal = maze[closestPoint[0]][closestPoint[1]][closestPoint[2]] # mazegoal.searchtree #
+            print 'pos. of mazestart: ', (mazestart.x, mazestart.y, mazestart.z)
+            print 'pos. of mazegoal:  ', (mazegoal.x, mazegoal.y, mazegoal.z)
             if mazestart == mazegoal or mazegoal.searchtree.obstacle:
+                rospy.logfatal('detected obstacle!')
                 break
 
         if mazestart != mazegoal:

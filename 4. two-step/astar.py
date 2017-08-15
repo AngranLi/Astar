@@ -352,7 +352,7 @@ def generateRefinedTrajectory(roughTrajectory):
     # initialize environment
     startPoint = tuple(init.gridalize(current_position, scale_fine))
     # (roughTrajectory[i-2][0]*scaleRatio, roughTrajectory[i-2][1]*scaleRatio, roughTrajectory[i-2][2]*scaleRatio)
-    distsq_min = 10000000000
+    distsq_min = 10000000
     closestPoint_id = 0
     for i in range(len(roughTrajectory)):
         distsq = (roughTrajectory[i][0]*scaleRatio -startPoint[0])**2 + (roughTrajectory[i][1]*scaleRatio -startPoint[1])**2 + (roughTrajectory[i][2]*scaleRatio -startPoint[2])**2
@@ -487,7 +487,7 @@ diagram_rough = GridWithWeights(mapBound_grid_rough)
 mapBound_grid_fine = init.gridalize(mapBound_metre, scale_fine)
 diagram_fine = GridWithWeights(mapBound_grid_fine)
 
-''' Initialize obstacle array '''
+''' Initialize obstacle dictionary '''
 obstDict_rough = {}
 obstDict_fine  = {}
 roughTrajectory = []
