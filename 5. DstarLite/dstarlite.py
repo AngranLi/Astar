@@ -5,6 +5,7 @@
 '''
 import math
 import random
+import timeit
 import rospy
 import inc
 import initEnv
@@ -434,6 +435,29 @@ def callback_current(data):  # data contains the current point
 
     callback_current_flg = True
 
+def callback_obst_UAV1(centrePos):
+    centrePoint = (int(centrePos.pose.position.x*scale), int(centrePos.pose.position.y*scale), int(centrePos.pose.position.z*scale))
+    tempobst = initEnv.Obstacle('obst_UAV1', centrePoint)
+    initEnv.updateObst(tempobst)
+
+    callback_obst_UAV1_flg = True
+
+
+def callback_obst_UGV1(centrePos):
+    centrePoint = (int(centrePos.pose.position.x*scale), int(centrePos.pose.position.y*scale), int(centrePos.pose.position.z*scale))
+    tempobst = initEnv.Obstacle('obst_UGV1', centrePoint)
+    initEnv.updateObst(tempobst)
+
+    callback_obst_UGV1_flg = True
+
+
+def callback_obst_person1(centrePos):
+    centrePoint = (int(centrePos.pose.position.x*scale), int(centrePos.pose.position.y*scale), int(centrePos.pose.position.z*scale))
+    tempobst = initEnv.Obstacle('obst_person1', centrePoint)
+    initEnv.updateObst(tempobst)
+
+    callback_obst_person1_flg = True
+
 ################################################################################
 ################################################################################
 
@@ -455,9 +479,9 @@ rate = rospy.Rate(10) # loop runs at x Hertz
 ''' Set original value of flags '''
 # gotPath = False
 # pathBlocked = True
-# callback_obst_UAV1_flg = True
-# callback_obst_UGV1_flg = True
-# callback_obst_person1_flg = True
+callback_obst_UAV1_flg = True
+callback_obst_UGV1_flg = True
+callback_obst_person1_flg = True
 callback_current_flg = True
 # callback_target_flg = True
 
@@ -489,82 +513,96 @@ createpermutations()
 
 keymodifier = 0
 
-for k in range(inc.RUNS):
-    print '====================================================================='
-    print 'maze', k
+print '====================================================================='
 
 
-    initEnv.newrandommaze()
 
-    rospy.signal_shutdown()
-    # initEnv.newdfsmaze(inc.WALLSTOREMOVE)
+initEnv.newEmptyEnv()
+# initEnv.newdfsmaze(inc.WALLSTOREMOVE)
 
-    # receive current position of UAV
-    while callback_current_flg:
-        ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
-        callback_current_flg = False
-    rospy.sleep(1)
+# receive obstacle position
+while callback_obst_UAV1_flg:
+    obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
+    callback_obst_UAV1_flg = False
+while callback_obst_UGV1_flg:
+    obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
+    callback_obst_UGV1_flg = False
+while callback_obst_person1_flg:
+    obstSub = rospy.Subscriber('/UAV_4/pose', PoseStamped, callback_obst_person1)
+    callback_obst_person1_flg = False
 
-    print 'currentPoint pos. 1', currentPoint.points[0].x, currentPoint.points[0].y, currentPoint.points[0].z
+# receive current position of UAV
+while callback_current_flg:
+    ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
+    callback_current_flg = False
+rospy.sleep(0.3)
 
-    maze 		= initEnv.maze
-    mazestart   = initEnv.mazestart
-    mazegoal    = maze[currentPoint.points[0].x][currentPoint.points[0].y][currentPoint.points[0].z] # initEnv.mazegoal
-    print 'currentPoint pos. 2', currentPoint.points[0].x, currentPoint.points[0].y, currentPoint.points[0].z
+maze 		= initEnv.maze
+mazestart   = initEnv.mazestart
+mazegoal    = maze[currentPoint.points[0].x][currentPoint.points[0].y][currentPoint.points[0].z] # initEnv.mazegoal
 
-    # print 'Start point: '
-    # print 'Destination: '
-    publishactualmaze()
+publishactualmaze()
+rospy.sleep(0.1)
 
-    initialize()
-    lastcell = mazegoal
-    while mazestart != mazegoal:
-        if computeshortestpath():
-            print 'breaaaaak'
+initialize()
+lastcell = mazegoal
+while mazestart != mazegoal:
+    if computeshortestpath():
+        rospy.logfatal('breaaaaak')
+        break
+
+    publishknownmaze()
+    rospy.sleep(0.1)
+
+    mazegoal.trace = None
+    while True:
+        # receive current position of UAV
+        while callback_current_flg:
+            ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
+            callback_current_flg = False
+
+        # receive obstacle position
+        while callback_obst_UAV1_flg:
+            obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
+            callback_obst_UAV1_flg = False
+        while callback_obst_UGV1_flg:
+            obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
+            callback_obst_UGV1_flg = False
+        while callback_obst_person1_flg:
+            obstSub = rospy.Subscriber('/UAV_4/pose', PoseStamped, callback_obst_person1)
+            callback_obst_person1_flg = False
+
+        publishactualmaze()
+        rospy.sleep(0.2)
+
+        dist_min = 200
+        closestPoint_id = 0
+        try:
+            for i in range(len(pathPoint.points)):
+                dist = abs(pathPoint.points[i].x-currentPoint.points[0].x) + abs(pathPoint.points[i].y-currentPoint.points[0].y) + abs(pathPoint.points[i].z-currentPoint.points[0].z)
+                if dist < dist_min:
+                    dist_min = dist
+                    closestPoint_id = i
+        except IndexError:
+            print 'i is ', i
+            print 'len(pathPoint.points): ', len(pathPoint.points)
+        closestPoint = (pathPoint.points[closestPoint_id].x, pathPoint.points[closestPoint_id].y, pathPoint.points[closestPoint_id].z)
+        mazegoal.searchtree.trace = mazegoal
+        mazegoal = maze[closestPoint[0]][closestPoint[1]][closestPoint[2]] # mazegoal.searchtree #
+        print 'pos. of mazestart: ', (mazestart.x, mazestart.y, mazestart.z)
+        print 'pos. of mazegoal:  ', (mazegoal.x, mazegoal.y, mazegoal.z)
+        if mazestart == mazegoal or mazegoal.searchtree.obstacle:
+            rospy.logfatal('detected obstacle!')
             break
 
-        publishknownmaze()
-        rospy.sleep(0.1)
+    if mazestart != mazegoal:
+        keymodifier = keymodifier + heuristic(lastcell)
+        lastcell = mazegoal
 
-        mazegoal.trace = None
-        while True:
-            # receive current position of UAV
-            while callback_current_flg:
-                ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
-                callback_current_flg = False
+        tmpcell = mazegoal
+        while tmpcell:
+            updatemaze(tmpcell)
+            tmpcell = tmpcell.trace
 
-            dist_min = 200
-            closestPoint_id = 0
-            # print 'pathPoint.points: \n', pathPoint.points
-            # print type(pathPoint.points), len(pathPoint.points)
-            # print pathPoint.points[3].x
-            try:
-                for i in range(len(pathPoint.points)):
-                    dist = abs(pathPoint.points[i].x-currentPoint.points[0].x) + abs(pathPoint.points[i].y-currentPoint.points[0].y) + abs(pathPoint.points[i].z-currentPoint.points[0].z)
-                    if dist < dist_min:
-                        dist_min = dist
-                        closestPoint_id = i
-            except IndexError:
-                print 'i is ', i
-                print 'len(pathPoint.points): ', len(pathPoint.points)
-            closestPoint = (pathPoint.points[closestPoint_id].x, pathPoint.points[closestPoint_id].y, pathPoint.points[closestPoint_id].z)
-            # print 'closestPoint: ', closestPoint
-            mazegoal.searchtree.trace = mazegoal
-            mazegoal = maze[closestPoint[0]][closestPoint[1]][closestPoint[2]] # mazegoal.searchtree #
-            print 'pos. of mazestart: ', (mazestart.x, mazestart.y, mazestart.z)
-            print 'pos. of mazegoal:  ', (mazegoal.x, mazegoal.y, mazegoal.z)
-            if mazestart == mazegoal or mazegoal.searchtree.obstacle:
-                rospy.logfatal('detected obstacle!')
-                break
-
-        if mazestart != mazegoal:
-            keymodifier = keymodifier + heuristic(lastcell)
-            lastcell = mazegoal
-
-            tmpcell = mazegoal
-            while tmpcell:
-                updatemaze(tmpcell)
-                tmpcell = tmpcell.trace
-
-    print 'Finished.'
-    rospy.sleep(3)
+print 'Finished.'
+rospy.sleep(1)

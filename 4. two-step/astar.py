@@ -495,7 +495,7 @@ roughTrajectory = []
 ''' Loop for path planning '''
 while not rospy.is_shutdown():
 
-    # receive obstacle postion
+    # receive obstacle position
     while callback_obst_UAV1_flg:
         obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
         callback_obst_UAV1_flg = False
