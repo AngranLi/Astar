@@ -25,7 +25,6 @@ def publishactualmaze():
     global mazegoal
 
     print 'Publishing actual maze...'
-    print 'mazegoal pos. ', mazegoal.x, mazegoal.y, mazegoal.z
 
     sourcePoint  	= init.initPointMarkers()
     goalPoint		= init.initPointMarkers()
@@ -515,8 +514,6 @@ keymodifier = 0
 
 print '====================================================================='
 
-
-
 initEnv.newEmptyEnv()
 # initEnv.newdfsmaze(inc.WALLSTOREMOVE)
 
@@ -591,6 +588,8 @@ while mazestart != mazegoal:
         mazegoal = maze[closestPoint[0]][closestPoint[1]][closestPoint[2]] # mazegoal.searchtree #
         print 'pos. of mazestart: ', (mazestart.x, mazestart.y, mazestart.z)
         print 'pos. of mazegoal:  ', (mazegoal.x, mazegoal.y, mazegoal.z)
+        publishknownmaze()
+        rospy.sleep(0.1)
         if mazestart == mazegoal or mazegoal.searchtree.obstacle:
             rospy.logfatal('detected obstacle!')
             break
