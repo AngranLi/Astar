@@ -25,7 +25,7 @@ class Cell():
         self.heapindex = 0
 
 class Obstacle():
-    def __init__(self, name, centrePoint, length=inc.MAZELENGTH/10, width=inc.MAZEWIDTH/10, height=inc.MAZEHEIGHT):
+    def __init__(self, name, centrePoint, length=inc.MAZELENGTH/5, width=inc.MAZEWIDTH/5, height=inc.MAZEHEIGHT):
         self.centrePoint = centrePoint
         self.length = length
         self.width  = width
@@ -169,7 +169,7 @@ def newEmptyEnv():
 def updateObst(tempobst):
     global obstDict
 
-    for key in obstDict:
+    for key in obstDict.copy():
         if tempobst.name == key:
             for x in range(obstDict[key].left, obstDict[key].right+1):
                 for y in range(obstDict[key].back, obstDict[key].front+1):

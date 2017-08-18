@@ -276,7 +276,6 @@ def callback_target(data):  # data contains the target point
     callback_target_flg = True
 
 def generateRoughTrajectory():
-    print
     print '====================================='
     print 'Generating the rough path...'
 
@@ -351,6 +350,8 @@ def generateRefinedTrajectory(roughTrajectory):
 
     # initialize environment
     startPoint = tuple(init.gridalize(current_position, scale_fine))
+    print
+    print 'startPoint: ', startPoint
     # (roughTrajectory[i-2][0]*scaleRatio, roughTrajectory[i-2][1]*scaleRatio, roughTrajectory[i-2][2]*scaleRatio)
     distsq_min = 10000000
     closestPoint_id = 0
@@ -360,8 +361,6 @@ def generateRefinedTrajectory(roughTrajectory):
             distsq_min = distsq
             closestPoint_id = i
 
-    print
-    print 'startPoint: ', startPoint
     print 'closestPoint_id: ', closestPoint_id
     print 'closestPoint: ', (roughTrajectory[closestPoint_id][0] *scaleRatio,
                 roughTrajectory[closestPoint_id][1] *scaleRatio, roughTrajectory[closestPoint_id][2] *scaleRatio)
@@ -373,7 +372,6 @@ def generateRefinedTrajectory(roughTrajectory):
                     roughTrajectory[-1][2] *scaleRatio)
 
     heap_percolation = 0
-    print 'startPoint: ', startPoint
     print 'endPoint: ', endPoint
 
     boundMarker     = visualization.setBoundary(mapBound_grid_fine)
@@ -400,11 +398,19 @@ def generateRefinedTrajectory(roughTrajectory):
                 print 'dist is ', dist
                 rospy.signal_shutdown()
 
-        if obstDict_fine[key].conflict(endPoint):
-            rospy.logfatal('Destination conflicts with obstacle!')
-            print 'Centre of obstacle: ', obstDict_fine[key].centre_point
-            print 'Radius of obstacle: ', obstDict_fine[key].radius
-            rospy.signal_shutdown()
+        # if obstDict_fine[key].conflict(endPoint):
+        while obstDict_fine[key].conflict(endPoint):
+            closestPoint_id += 1
+            try:
+                endPoint = (roughTrajectory[closestPoint_id+2][0] *scaleRatio, roughTrajectory[closestPoint_id+2][1] *scaleRatio,
+                            roughTrajectory[closestPoint_id+2][2] *scaleRatio)
+            except IndexError:
+                endPoint = (roughTrajectory[-1][0] *scaleRatio, roughTrajectory[-1][1] *scaleRatio,
+                            roughTrajectory[-1][2] *scaleRatio)
+            # rospy.logfatal('Destination conflicts with obstacle!')
+            # print 'Centre of obstacle: ', obstDict_fine[key].centre_point
+            # print 'Radius of obstacle: ', obstDict_fine[key].radius
+            # rospy.signal_shutdown()
 
     # Plan the path
     print
@@ -425,7 +431,6 @@ def generateRefinedTrajectory(roughTrajectory):
     pointsPub.publish(neighbourPoint)
     pathPub.publish(finalPath)
 
-    print
     print 'Path sent.'
 
     # Performance measurement
@@ -467,9 +472,9 @@ rate = rospy.Rate(10) # loop runs at x Hertz
 ''' Set original value of flags '''
 gotPath = False
 pathBlocked = True
-callback_obst_UAV1_flg = True
-callback_obst_UGV1_flg = True
-callback_obst_person1_flg = True
+callback_obst_UAV1_flg = False
+callback_obst_UGV1_flg = False
+callback_obst_person1_flg = False
 callback_current_flg = True
 callback_target_flg = True
 
@@ -492,28 +497,30 @@ obstDict_rough = {}
 obstDict_fine  = {}
 roughTrajectory = []
 
+''' Callback functions '''
+# receive obstacle position
+while callback_obst_UAV1_flg:
+    obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
+    callback_obst_UAV1_flg = False
+while callback_obst_UGV1_flg:
+    obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
+    callback_obst_UGV1_flg = False
+while callback_obst_person1_flg:
+    obstSub = rospy.Subscriber('/UAV_4/pose', PoseStamped, callback_obst_person1)
+    callback_obst_person1_flg = False
+# receive current position of UAV
+while callback_current_flg:
+    ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
+    callback_current_flg = False
+# receive requested destination
+while callback_target_flg:
+    ppSub   = rospy.Subscriber('target_request', PoseStamped, callback_target)
+    callback_target_flg = False
+
+rospy.sleep(0.3)
+
 ''' Loop for path planning '''
 while not rospy.is_shutdown():
-
-    # receive obstacle position
-    while callback_obst_UAV1_flg:
-        obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
-        callback_obst_UAV1_flg = False
-    while callback_obst_UGV1_flg:
-        obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
-        callback_obst_UGV1_flg = False
-    while callback_obst_person1_flg:
-        obstSub = rospy.Subscriber('/UAV_4/pose', PoseStamped, callback_obst_person1)
-        callback_obst_person1_flg = False
-
-    # receive current position of UAV
-    while callback_current_flg:
-        ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
-        callback_current_flg = False
-    # receive requested destination
-    while callback_target_flg:
-        ppSub   = rospy.Subscriber('target_request', PoseStamped, callback_target)
-        callback_target_flg = False
 
     ''' Generate a rough trajectory'''
     if (not gotPath) or pathBlocked:

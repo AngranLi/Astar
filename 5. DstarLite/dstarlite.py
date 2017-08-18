@@ -466,8 +466,8 @@ scale = 10
 
 startPoint  = (0, 0, 0)
 endPoint    = (0, 0, 0)
-current_position  = (1, 1, 0.5)
-target_position   = (4.5, 4, 2.0)
+current_position  = (1, 1, 1)
+target_position   = (4.5, 4.0, 2.0)
 
 ''' Initialize ROS node and publishers '''
 rospy.init_node('dstar_node', anonymous=True) # rosnode name
@@ -519,7 +519,7 @@ initEnv.newEmptyEnv()
 
 # receive obstacle position
 while callback_obst_UAV1_flg:
-    obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
+    obstSub = rospy.Subscriber('UAV_2/pose', PoseStamped, callback_obst_UAV1)
     callback_obst_UAV1_flg = False
 while callback_obst_UGV1_flg:
     obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
@@ -539,7 +539,7 @@ mazestart   = initEnv.mazestart
 mazegoal    = maze[currentPoint.points[0].x][currentPoint.points[0].y][currentPoint.points[0].z] # initEnv.mazegoal
 
 publishactualmaze()
-rospy.sleep(0.1)
+# rospy.sleep(0.1)
 
 initialize()
 lastcell = mazegoal
@@ -549,28 +549,28 @@ while mazestart != mazegoal:
         break
 
     publishknownmaze()
-    rospy.sleep(0.1)
+    # rospy.sleep(0.1)
 
     mazegoal.trace = None
     while True:
-        # receive current position of UAV
-        while callback_current_flg:
-            ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
-            callback_current_flg = False
-
-        # receive obstacle position
-        while callback_obst_UAV1_flg:
-            obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
-            callback_obst_UAV1_flg = False
-        while callback_obst_UGV1_flg:
-            obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
-            callback_obst_UGV1_flg = False
-        while callback_obst_person1_flg:
-            obstSub = rospy.Subscriber('/UAV_4/pose', PoseStamped, callback_obst_person1)
-            callback_obst_person1_flg = False
+        # # receive current position of UAV
+        # while callback_current_flg:
+        #     ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
+        #     callback_current_flg = False
+        #
+        # # receive obstacle position
+        # while callback_obst_UAV1_flg:
+        #     obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
+        #     callback_obst_UAV1_flg = False
+        # while callback_obst_UGV1_flg:
+        #     obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
+        #     callback_obst_UGV1_flg = False
+        # while callback_obst_person1_flg:
+        #     obstSub = rospy.Subscriber('/UAV_4/pose', PoseStamped, callback_obst_person1)
+        #     callback_obst_person1_flg = False
 
         publishactualmaze()
-        rospy.sleep(0.2)
+        # rospy.sleep(0.1)
 
         dist_min = 200
         closestPoint_id = 0
@@ -589,9 +589,9 @@ while mazestart != mazegoal:
         print 'pos. of mazestart: ', (mazestart.x, mazestart.y, mazestart.z)
         print 'pos. of mazegoal:  ', (mazegoal.x, mazegoal.y, mazegoal.z)
         publishknownmaze()
-        rospy.sleep(0.1)
+        # rospy.sleep(0.1)
         if mazestart == mazegoal or mazegoal.searchtree.obstacle:
-            rospy.logfatal('detected obstacle!')
+            rospy.logwarn('detected obstacle!')
             break
 
     if mazestart != mazegoal:
