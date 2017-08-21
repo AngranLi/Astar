@@ -29,6 +29,7 @@ def testheap():
 def percolatedown(hole, tmpcell):
     global heap
     global heapsize
+    global heap_percolation
 
     if heapsize != 0:
         while 2*hole <= heapsize:
@@ -45,10 +46,13 @@ def percolatedown(hole, tmpcell):
         heap[hole] = tmpcell
         heap[hole].heapindex = hole
 
+        heap_percolation += 1
+
 
 def percolateup(hole, tmpcell):
     global heap
     global heapsize
+    global heap_percolation
 
     if heapsize != 0:
         while hole > 1 and keyless(tmpcell, heap[hole/2]):
@@ -57,6 +61,8 @@ def percolateup(hole, tmpcell):
             hole = hole/2
         heap[hole] = tmpcell
         heap[hole].heapindex = hole
+
+        heap_percolation += 1
 
 
 def percolateupordown(hole, tmpcell):
@@ -129,3 +135,4 @@ def insertheap(thiscell):
 heap = {0:None}
 heapsize = 0
 keylength = 3
+heap_percolation = 0

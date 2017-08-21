@@ -1,25 +1,13 @@
-import random
-# import rospy
-# import inc
-# # import initEnv
-# # import prioQ
-# import init
-# from geometry_msgs.msg import PointStamped, Point
-# from visualization_msgs.msg import Marker, MarkerArray
-#
-# permutation = []
-# for i in range(inc.DIRECTIONS):
-#     column = []
-#     for i in range(inc.DIRECTIONS):
-#         column.append(i)
-#     permutation.append(column)
-#
-# print len(permutation),
-# print len(permutation[0])
-# print permutation
+import test2
 
-def showit():
-    print a
 
-a = 5
-showit()
+# print test2.heap_percolation
+#
+# test2.percolateup()
+#
+# print test2.heap_percolation
+
+
+a, b = test2.return2values()
+print a
+print b

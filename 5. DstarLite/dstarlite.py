@@ -459,6 +459,7 @@ def callback_obst_person1(centrePos):
 
 ################################################################################
 ################################################################################
+################################################################################
 
 ''' Set original environment '''
 mapBound_metre = (5, 5, 3)      # 3D boundary of the operating environment
@@ -483,6 +484,11 @@ callback_obst_UGV1_flg = True
 callback_obst_person1_flg = True
 callback_current_flg = True
 # callback_target_flg = True
+
+''' Performance measurement '''
+len_of_path = 0
+execution_time = 0
+vertex_expension = 0
 
 ''' Intialize markers '''
 currentPoint = init.initPointMarkers()
@@ -543,6 +549,7 @@ publishactualmaze()
 
 initialize()
 lastcell = mazegoal
+
 while mazestart != mazegoal:
     if computeshortestpath():
         rospy.logfatal('breaaaaak')
@@ -553,22 +560,6 @@ while mazestart != mazegoal:
 
     mazegoal.trace = None
     while True:
-        # # receive current position of UAV
-        # while callback_current_flg:
-        #     ppSub   = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_current)
-        #     callback_current_flg = False
-        #
-        # # receive obstacle position
-        # while callback_obst_UAV1_flg:
-        #     obstSub = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_obst_UAV1)
-        #     callback_obst_UAV1_flg = False
-        # while callback_obst_UGV1_flg:
-        #     obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UGV1)
-        #     callback_obst_UGV1_flg = False
-        # while callback_obst_person1_flg:
-        #     obstSub = rospy.Subscriber('/UAV_4/pose', PoseStamped, callback_obst_person1)
-        #     callback_obst_person1_flg = False
-
         publishactualmaze()
         # rospy.sleep(0.1)
 
@@ -604,4 +595,4 @@ while mazestart != mazegoal:
             tmpcell = tmpcell.trace
 
 print 'Finished.'
-rospy.sleep(1)
+print 'Heap percolation: ', heap_percolation
