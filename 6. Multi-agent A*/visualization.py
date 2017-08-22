@@ -141,7 +141,7 @@ def setObstacle(obstArray):
         elif item.text == 'obst_UGV':
             obstMarker.pose.position.z = item.centre_point[2] - item.height/2
         elif item.text == 'obst_person':
-            obstMarker.pose.position.z = 300/2
+            obstMarker.pose.position.z = 150/2
         obstMarker.id = i
         i += 1
         obstMarkerArray.markers.append(obstMarker)
