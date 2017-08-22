@@ -489,6 +489,7 @@ callback_current_flg = True
 len_of_path = 0
 execution_time = 0
 vertex_expension = 0
+experiment_time = time.strftime('%m-%d %H:%M')
 
 ''' Intialize markers '''
 currentPoint = init.initPointMarkers()
@@ -557,6 +558,12 @@ while mazestart != mazegoal:
 
     publishknownmaze()
     # rospy.sleep(0.1)
+    tempList = []
+    for i in range(len(path.points)):
+        tempList.append((path.points[i].x, path.points[i].y, path.points[i].z))
+    f= open('DstarPath ' + experiment_time, 'a')
+    f.write(str(tempList)+'\n\n\n')
+    f.close()
 
     mazegoal.trace = None
     while True:

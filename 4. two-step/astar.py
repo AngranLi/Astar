@@ -4,6 +4,7 @@ import heapq
 import random
 import math
 import timeit
+import time
 import string
 import init
 import visualization
@@ -286,6 +287,7 @@ def generateRoughTrajectory():
     global scale_rough
     global obstDict_rough
     global heap_percolation
+    global experiment_time
 
     # initialize environment
     startPoint  = tuple(init.gridalize(current_position, scale_rough))
@@ -317,13 +319,11 @@ def generateRoughTrajectory():
     roughTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
     execution_time = timeit.default_timer() - start_time
 
-    # searchedPoints = []
-    # for key in came_from:
-    #     searchedPoints.append(came_from[key])
-    # searchedPoints.remove(None)
-    # Performance measurement
+
+    f = open('roughPath ' + experiment_time, 'a')
+    f.write(str(roughTrajectory)+'\n\n\n')
+    f.close()
     len_of_path = cost_so_far[endPoint]
-    # vertex_expension = len(searchedPoints)
     vertex_expension = len(came_from)
 
     print
@@ -423,7 +423,7 @@ def generateRefinedTrajectory(roughTrajectory):
     # These four values are all visualization markers!
     (sourcePoint, goalPoint, neighbourPoint,
         finalPath) = visualization.setPathMarkers(finalTrajectory, came_from)
-    finalPath.text = '0'
+    finalPath.text = '1'
 
     # Publish the path
     pointsPub.publish(sourcePoint)
@@ -461,7 +461,7 @@ refineRatio = int((scale_fine/scale_rough)**(1.0/3))
 startPoint  = (0, 0, 0)
 endPoint    = (0, 0, 0)
 current_position  = (1, 1, 0.5)
-target_position   = (4.5, 4, 2.0)
+target_position   = (2.5, 3, 2.0)
 
 ''' Initialize ROS node and publishers '''
 rospy.init_node('astar_node', anonymous=True) # rosnode name
@@ -483,6 +483,7 @@ len_of_path = 0
 execution_time = 0
 vertex_expension = 0
 heap_percolation = 0
+experiment_time = time.strftime('%m-%d %H:%M')
 
 ''' Initialize grid map '''
 # rough grid map
