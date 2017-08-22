@@ -547,6 +547,7 @@ mazegoal    = maze[currentPoint.points[0].x][currentPoint.points[0].y][currentPo
 
 publishactualmaze()
 # rospy.sleep(0.1)
+start_time = timeit.default_timer()
 
 initialize()
 lastcell = mazegoal
@@ -556,11 +557,15 @@ while mazestart != mazegoal:
         rospy.logfatal('breaaaaak')
         break
 
+    execution_time = timeit.default_timer() - start_time
+    f = open('executionTime ' + experiment_time, 'a')
+    f.write('newPath\t'+str(execution_time)+'\n')
+    f.close()
     publishknownmaze()
     # rospy.sleep(0.1)
     tempList = []
-    for i in range(len(path.points)):
-        tempList.append((path.points[i].x, path.points[i].y, path.points[i].z))
+    for i in range(len(pathPoint.points)):
+        tempList.append((pathPoint.points[i].x, pathPoint.points[i].y, pathPoint.points[i].z))
     f= open('DstarPath ' + experiment_time, 'a')
     f.write(str(tempList)+'\n\n\n')
     f.close()
@@ -570,6 +575,7 @@ while mazestart != mazegoal:
         publishactualmaze()
         # rospy.sleep(0.1)
 
+        start_time = timeit.default_timer()
         dist_min = 200
         closestPoint_id = 0
         try:
@@ -586,9 +592,15 @@ while mazestart != mazegoal:
         mazegoal = maze[closestPoint[0]][closestPoint[1]][closestPoint[2]] # mazegoal.searchtree #
         print 'pos. of mazestart: ', (mazestart.x, mazestart.y, mazestart.z)
         print 'pos. of mazegoal:  ', (mazegoal.x, mazegoal.y, mazegoal.z)
+        execution_time = timeit.default_timer() - start_time
+        
+        f = open('executionTime ' + experiment_time, 'a')
+        f.write('oldPath\t'+str(execution_time)+'\n')
+        f.close()
         publishknownmaze()
         # rospy.sleep(0.1)
         if mazestart == mazegoal or mazegoal.searchtree.obstacle:
+            start_time = timeit.default_timer()
             rospy.logwarn('detected obstacle!')
             break
 
@@ -603,3 +615,7 @@ while mazestart != mazegoal:
 
 print 'Finished.'
 print 'Heap percolation: ', heap_percolation
+
+f = open('heapPercolation ' + experiment_time, 'a')
+f.write('refinedPath\t'+str(heap_percolation)+'\n')
+f.close()

@@ -318,7 +318,9 @@ def generateRoughTrajectory():
     came_from, cost_so_far = a_star_search(diagram_rough, obstDict_rough, startPoint, endPoint, 1.01)
     roughTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
     execution_time = timeit.default_timer() - start_time
-
+    f = open('executionTime ' + experiment_time, 'a')
+    f.write('roughPath\t'+str(execution_time)+'\n')
+    f.close()
 
     f = open('roughPath ' + experiment_time, 'a')
     f.write(str(roughTrajectory)+'\n\n\n')
@@ -331,6 +333,14 @@ def generateRoughTrajectory():
     print 'Path planning execution time: ', execution_time
     print 'Vetices expanded: ', vertex_expension
     print 'Heap percolated: ', heap_percolation
+
+    f = open('pathLength ' + experiment_time, 'a')
+    f.write('roughPath\t'+str(len_of_path/scale_rough)+'\n')
+    f.close()
+
+    f = open('heapPercolation ' + experiment_time, 'a')
+    f.write('roughPath\t'+str(heap_percolation)+'\n')
+    f.close()
 
     return roughTrajectory
 
@@ -347,6 +357,7 @@ def generateRefinedTrajectory(roughTrajectory):
     global obstDict_fine
     global heap_percolation
     global scaleRatio
+    global experiment_time
 
     # initialize environment
     startPoint = tuple(init.gridalize(current_position, scale_fine))
@@ -419,6 +430,9 @@ def generateRefinedTrajectory(roughTrajectory):
     came_from, cost_so_far = a_star_search(diagram_fine, obstDict_fine, startPoint, endPoint, 1.5)
     finalTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
     execution_time = timeit.default_timer() - start_time
+    f = open('executionTime ' + experiment_time, 'a')
+    f.write('refinedPath\t'+str(execution_time)+'\n')
+    f.close()
 
     # These four values are all visualization markers!
     (sourcePoint, goalPoint, neighbourPoint,
@@ -444,6 +458,14 @@ def generateRefinedTrajectory(roughTrajectory):
     print 'Path planning execution time: ', execution_time
     print 'Vetices expanded: ', vertex_expension
     print 'Heap percolated: ', heap_percolation
+
+    f = open('pathLength ' + experiment_time, 'a')
+    f.write('refinedPath\t'+str(len_of_path/scale_fine)+'\n')
+    f.close()
+
+    f = open('heapPercolation ' + experiment_time, 'a')
+    f.write('refinedPath\t'+str(heap_percolation)+'\n')
+    f.close()
 
     return finalTrajectory
 
