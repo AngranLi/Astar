@@ -131,13 +131,14 @@ def initObstMarker():
     return obstacle
 
 
-def initPublishers():
+def initPublishers(num):
     pathPub     = rospy.Publisher('path_planner_rrt', Marker, queue_size=10) # rostopic name
-    pointsPub   = rospy.Publisher('points_markers', Marker, queue_size=10)
-    boundPub    = rospy.Publisher('bound_markers', Marker, queue_size=10)
-    obstPub     = rospy.Publisher('obstMarkers_array', MarkerArray, queue_size=10)
-    roughPub    = rospy.Publisher('roughPath_markers', Marker, queue_size=10)
-    return (pathPub, pointsPub, boundPub, obstPub, roughPub)
+    pointsPub   = rospy.Publisher('points_markers'+str(num), Marker, queue_size=10)
+    boundPub    = rospy.Publisher('bound_markers'+str(num), Marker, queue_size=10)
+    obstPub     = rospy.Publisher('obstMarkers_array'+str(num), MarkerArray, queue_size=10)
+    roughPub    = rospy.Publisher('roughPath_markers'+str(num), Marker, queue_size=10)
+    refinedPub   = rospy.Publisher('refinedPath_markers'+str(num), Marker, queue_size=10)
+    return (pathPub, pointsPub, boundPub, obstPub, roughPub, refinedPub)
 
 def gridalize(value, scale):
     if isinstance(value, tuple):

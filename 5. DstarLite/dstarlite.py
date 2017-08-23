@@ -6,6 +6,7 @@
 import math
 import random
 import timeit
+import time
 import rospy
 import inc
 import initEnv
@@ -567,7 +568,7 @@ while mazestart != mazegoal:
     for i in range(len(pathPoint.points)):
         tempList.append((pathPoint.points[i].x, pathPoint.points[i].y, pathPoint.points[i].z))
     f= open('DstarPath ' + experiment_time, 'a')
-    f.write(str(tempList)+'\n\n\n')
+    f.write(time.strftime('%H:%M:%S')+'\n'+str(tempList)+'\n\n\n')
     f.close()
 
     mazegoal.trace = None
@@ -593,7 +594,7 @@ while mazestart != mazegoal:
         print 'pos. of mazestart: ', (mazestart.x, mazestart.y, mazestart.z)
         print 'pos. of mazegoal:  ', (mazegoal.x, mazegoal.y, mazegoal.z)
         execution_time = timeit.default_timer() - start_time
-        
+
         f = open('executionTime ' + experiment_time, 'a')
         f.write('oldPath\t'+str(execution_time)+'\n')
         f.close()

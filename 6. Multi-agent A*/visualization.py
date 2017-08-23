@@ -126,7 +126,7 @@ def setBoundary(mapBound_grid):
     return boundary
 
 
-def setObstacle(obstArray):
+def setObstacle1(obstArray):
     obstMarkerArray = MarkerArray()
     i = 0
     for item in obstArray:
@@ -146,6 +146,52 @@ def setObstacle(obstArray):
         i += 1
         obstMarkerArray.markers.append(obstMarker)
     return obstMarkerArray
+
+
+def setObstacle2(obstArray):
+    obstMarkerArray = MarkerArray()
+    i = 0
+    for item in obstArray:
+        obstMarker = init.initObstMarker()
+        obstMarker.scale.x = 2*item.radius
+        obstMarker.scale.y = 2*item.radius
+        obstMarker.scale.z = item.height
+        obstMarker.pose.position.x = item.centre_point[0]
+        obstMarker.pose.position.y = item.centre_point[1]
+        if item.text == 'obst_UAV':
+            obstMarker.pose.position.z = item.centre_point[2]
+        elif item.text == 'obst_UGV':
+            obstMarker.pose.position.z = item.centre_point[2] - item.height/2
+        elif item.text == 'obst_person':
+            obstMarker.pose.position.z = 150/2
+        obstMarker.id = i
+        i += 1
+        obstMarkerArray.markers.append(obstMarker)
+    return obstMarkerArray
+
+
+def setObstacle3(obstArray):
+    obstMarkerArray = MarkerArray()
+    i = 0
+    for item in obstArray:
+        obstMarker = init.initObstMarker()
+        obstMarker.scale.x = 2*item.radius
+        obstMarker.scale.y = 2*item.radius
+        obstMarker.scale.z = item.height
+        obstMarker.pose.position.x = item.centre_point[0]
+        obstMarker.pose.position.y = item.centre_point[1]
+        if item.text == 'obst_UAV':
+            obstMarker.pose.position.z = item.centre_point[2]
+        elif item.text == 'obst_UGV':
+            obstMarker.pose.position.z = item.centre_point[2] - item.height/2
+        elif item.text == 'obst_person':
+            obstMarker.pose.position.z = 150/2
+        obstMarker.id = i
+        i += 1
+        obstMarkerArray.markers.append(obstMarker)
+    return obstMarkerArray
+
+
 
 def setRoughMarkers(roughTrajectory, scaleRatio):
     (orig_point, destination, roughPath) = init.initRoughMarkers()

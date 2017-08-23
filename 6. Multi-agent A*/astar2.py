@@ -123,19 +123,23 @@ def reconstruct_path(came_from, start, goal):
     current = goal
     path = [current]
     while current != start:
-        if current in came_from:
+        if current in came_from: # came_from.keys() ???
             current = came_from[current]
             path.append(current)
         else:
             rospy.logfatal('No available path!')
             print 'goalpoint: ', goal
-            print
             print 'currentpoint: ', start
+            print
             # print
             # print 'walls: \n', diagram.walls
-            f = open('came_from', 'w')
+            f = open('came_from_UAV2', 'a')
             for key in came_from:
-                f.write(str(key) + ':' + str(came_from[key]) + '  ')
+                f.write(str(key) + ':' + str(came_from[key]) + '\t')
+            f.close()
+            f = open('cost_so_far_UAV2', 'a')
+            for key in cost_so_far:
+                f.write(str(key) + ':' + str(cost_so_far[key]) + '\t')
             f.close()
             path.reverse()
             return path
@@ -340,15 +344,15 @@ def generateRoughTrajectory():
 
     # Plan the path
     start_time = timeit.default_timer()
-    came_from, cost_so_far = a_star_search(diagram_rough, obstDict_rough, startPoint, endPoint, 1.01)
+    came_from, cost_so_far = a_star_search(diagram_rough, obstDict_rough, startPoint, endPoint, 1.1)
     roughTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
     execution_time = timeit.default_timer() - start_time
-    f = open('executionTime ' + experiment_time, 'a')
+    f = open('execT_UAV2 ' + experiment_time, 'a')
     f.write('roughPath\t'+str(execution_time)+'\n')
     f.close()
 
-    f = open('roughPath ' + experiment_time, 'a')
-    f.write(str(roughTrajectory)+'\n\n\n')
+    f = open('rufPath_UAV2 ' + experiment_time, 'a')
+    f.write(time.strftime('%H:%M:%S')+'\n'+str(roughTrajectory)+'\n\n\n')
     f.close()
     len_of_path = cost_so_far[endPoint]
     vertex_expension = len(came_from)
@@ -359,11 +363,11 @@ def generateRoughTrajectory():
     print 'Vetices expanded: ', vertex_expension
     print 'Heap percolated: ', heap_percolation
 
-    f = open('pathLength ' + experiment_time, 'a')
+    f = open('pathL_UAV2 ' + experiment_time, 'a')
     f.write('roughPath\t'+str(len_of_path/scale_rough)+'\n')
     f.close()
 
-    f = open('heapPercolation ' + experiment_time, 'a')
+    f = open('heapPerc_UAV2 ' + experiment_time, 'a')
     f.write('roughPath\t'+str(heap_percolation)+'\n')
     f.close()
 
@@ -411,7 +415,7 @@ def generateRefinedTrajectory(roughTrajectory):
     print 'endPoint: ', endPoint
 
     boundMarker     = visualization.setBoundary(mapBound_grid_fine)
-    obstMarkerArray = visualization.setObstacle(obstDict_fine.values())
+    obstMarkerArray = visualization.setObstacle2(obstDict_fine.values())
 
     # Publish the boundary and obstacle
     boundPub.publish(boundMarker)
@@ -455,20 +459,21 @@ def generateRefinedTrajectory(roughTrajectory):
     came_from, cost_so_far = a_star_search(diagram_fine, obstDict_fine, startPoint, endPoint, 1.5)
     finalTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
     execution_time = timeit.default_timer() - start_time
-    f = open('executionTime ' + experiment_time, 'a')
+    f = open('execT_UAV2 ' + experiment_time, 'a')
     f.write('refinedPath\t'+str(execution_time)+'\n')
     f.close()
 
     # These four values are all visualization markers!
     (sourcePoint, goalPoint, neighbourPoint,
         finalPath) = visualization.setPathMarkers(finalTrajectory, came_from)
-    finalPath.text = '1'
+    finalPath.text = '2'
 
     # Publish the path
     pointsPub.publish(sourcePoint)
     pointsPub.publish(goalPoint)
     pointsPub.publish(neighbourPoint)
     pathPub.publish(finalPath)
+    refinedPub.publish(finalPath)
 
     print 'Path sent.'
 
@@ -484,11 +489,11 @@ def generateRefinedTrajectory(roughTrajectory):
     print 'Vetices expanded: ', vertex_expension
     print 'Heap percolated: ', heap_percolation
 
-    f = open('pathLength ' + experiment_time, 'a')
+    f = open('pathL_UAV2 ' + experiment_time, 'a')
     f.write('refinedPath\t'+str(len_of_path/scale_fine)+'\n')
     f.close()
 
-    f = open('heapPercolation ' + experiment_time, 'a')
+    f = open('heapPerc_UAV2 ' + experiment_time, 'a')
     f.write('refinedPath\t'+str(heap_percolation)+'\n')
     f.close()
 
@@ -507,12 +512,12 @@ refineRatio = int((scale_fine/scale_rough)**(1.0/3))
 
 startPoint  = (0, 0, 0)
 endPoint    = (0, 0, 0)
-current_position  = (1, 1, 0.5)
-target_position   = (2.5, 3, 2.0)
+current_position  = (4.0, 1.0, 1.0)
+target_position   = (1.0, 4.0, 1.5)
 
 ''' Initialize ROS node and publishers '''
 rospy.init_node('astar_node', anonymous=True) # rosnode name
-(pathPub, pointsPub, boundPub, obstPub, roughPub) = init.initPublishers() # initialize publishers
+(pathPub, pointsPub, boundPub, obstPub, roughPub, refinedPub) = init.initPublishers(2) # initialize publishers
 rospy.sleep(0.3) # it takes time to initialize publishers
 rate = rospy.Rate(10) # loop runs at x Hertz
 
@@ -552,7 +557,7 @@ while callback_obst_UAV1_flg:
     obstSub = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_obst_UAV1)
     callback_obst_UAV1_flg = False
 while callback_obst_UAV2_flg:
-    obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UAV1)
+    obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UAV2)
     callback_obst_UAV2_flg = False
 while callback_obst_UGV1_flg:
     obstSub = rospy.Subscriber('/UGV_1/pose', PoseStamped, callback_obst_UGV1)
