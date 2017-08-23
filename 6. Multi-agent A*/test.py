@@ -7,10 +7,6 @@
 #
 # print 'last elemnt: ', lst[-1]
 
-import math
-
-for i in range(5, -1, -1):
-    try:
-        print 5/float(i)
-    except ZeroDivisionError:
-        print 'i is ', i
+f = open('test', 'w')
+f.write('yo yo covered')
+f.close()
