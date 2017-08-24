@@ -3,6 +3,11 @@ from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import PointStamped, Point
 import init
 
+
+mapBound_metre = (4.5, 4.5, 3)      # 3D boundary of the operating environment
+scale_fine = 50
+mapBound_grid_fine = init.gridalize(mapBound_metre, scale_fine)
+
 def setPathMarkers(finalTrajectory, came_from):
     (sourcePoint, goalPoint, neighbourPoint, finalPath) = init.initPathMarkers()
 
@@ -133,15 +138,15 @@ def setObstacle1(obstArray):
         obstMarker = init.initObstMarker()
         obstMarker.scale.x = 2*item.radius
         obstMarker.scale.y = 2*item.radius
-        obstMarker.scale.z = item.height
+        obstMarker.scale.z = mapBound_grid_fine[2] # item.height
         obstMarker.pose.position.x = item.centre_point[0]
         obstMarker.pose.position.y = item.centre_point[1]
-        if item.text == 'obst_UAV':
-            obstMarker.pose.position.z = item.centre_point[2]
-        elif item.text == 'obst_UGV':
-            obstMarker.pose.position.z = item.centre_point[2] - item.height/2
-        elif item.text == 'obst_person':
-            obstMarker.pose.position.z = 150/2
+        # if item.text == 'obst_UAV':
+        obstMarker.pose.position.z = mapBound_grid_fine[2]/2
+        # elif item.text == 'obst_UGV':
+        #     obstMarker.pose.position.z = item.centre_point[2] - item.height/2
+        # elif item.text == 'obst_person':
+        #     obstMarker.pose.position.z = 150/2
         obstMarker.id = i
         i += 1
         obstMarkerArray.markers.append(obstMarker)
@@ -155,15 +160,15 @@ def setObstacle2(obstArray):
         obstMarker = init.initObstMarker()
         obstMarker.scale.x = 2*item.radius
         obstMarker.scale.y = 2*item.radius
-        obstMarker.scale.z = item.height
+        obstMarker.scale.z = mapBound_grid_fine[2] # item.height
         obstMarker.pose.position.x = item.centre_point[0]
         obstMarker.pose.position.y = item.centre_point[1]
-        if item.text == 'obst_UAV':
-            obstMarker.pose.position.z = item.centre_point[2]
-        elif item.text == 'obst_UGV':
-            obstMarker.pose.position.z = item.centre_point[2] - item.height/2
-        elif item.text == 'obst_person':
-            obstMarker.pose.position.z = 150/2
+        # if item.text == 'obst_UAV':
+        obstMarker.pose.position.z = mapBound_grid_fine[2]/2
+        # elif item.text == 'obst_UGV':
+        #     obstMarker.pose.position.z = item.centre_point[2] - item.height/2
+        # elif item.text == 'obst_person':
+        #     obstMarker.pose.position.z = 150/2
         obstMarker.id = i
         i += 1
         obstMarkerArray.markers.append(obstMarker)
@@ -177,15 +182,15 @@ def setObstacle3(obstArray):
         obstMarker = init.initObstMarker()
         obstMarker.scale.x = 2*item.radius
         obstMarker.scale.y = 2*item.radius
-        obstMarker.scale.z = item.height
+        obstMarker.scale.z = mapBound_grid_fine[2] # item.height
         obstMarker.pose.position.x = item.centre_point[0]
         obstMarker.pose.position.y = item.centre_point[1]
-        if item.text == 'obst_UAV':
-            obstMarker.pose.position.z = item.centre_point[2]
-        elif item.text == 'obst_UGV':
-            obstMarker.pose.position.z = item.centre_point[2] - item.height/2
-        elif item.text == 'obst_person':
-            obstMarker.pose.position.z = 150/2
+        # if item.text == 'obst_UAV':
+        obstMarker.pose.position.z = mapBound_grid_fine[2]/2
+        # elif item.text == 'obst_UGV':
+        #     obstMarker.pose.position.z = item.centre_point[2] - item.height/2
+        # elif item.text == 'obst_person':
+        #     obstMarker.pose.position.z = 150/2
         obstMarker.id = i
         i += 1
         obstMarkerArray.markers.append(obstMarker)

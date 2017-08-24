@@ -559,7 +559,7 @@ while mazestart != mazegoal:
         break
 
     execution_time = timeit.default_timer() - start_time
-    f = open('executionTime ' + experiment_time, 'a')
+    f = open(experiment_time+' executionTime', 'a')
     f.write('newPath\t'+str(execution_time)+'\n')
     f.close()
     publishknownmaze()
@@ -567,7 +567,7 @@ while mazestart != mazegoal:
     tempList = []
     for i in range(len(pathPoint.points)):
         tempList.append((pathPoint.points[i].x, pathPoint.points[i].y, pathPoint.points[i].z))
-    f= open('DstarPath ' + experiment_time, 'a')
+    f= open(experiment_time+' DstarPath', 'a')
     f.write(time.strftime('%H:%M:%S')+'\n'+str(tempList)+'\n\n\n')
     f.close()
 
@@ -595,7 +595,7 @@ while mazestart != mazegoal:
         print 'pos. of mazegoal:  ', (mazegoal.x, mazegoal.y, mazegoal.z)
         execution_time = timeit.default_timer() - start_time
 
-        f = open('executionTime ' + experiment_time, 'a')
+        f = open(experiment_time+' executionTime', 'a')
         f.write('oldPath\t'+str(execution_time)+'\n')
         f.close()
         publishknownmaze()
@@ -615,8 +615,8 @@ while mazestart != mazegoal:
             tmpcell = tmpcell.trace
 
 print 'Finished.'
-print 'Heap percolation: ', heap_percolation
+print 'Heap percolation: ', prioQ.heap_percolation
 
-f = open('heapPercolation ' + experiment_time, 'a')
-f.write('refinedPath\t'+str(heap_percolation)+'\n')
+f = open(experiment_time+' heapPercolation', 'a')
+f.write('refinedPath\t'+str(prioQ.heap_percolation)+'\n')
 f.close()

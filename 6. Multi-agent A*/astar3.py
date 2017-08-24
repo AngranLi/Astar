@@ -102,12 +102,10 @@ class Obstacle():
 
     def conflict(self, point):
         # if in the vertical range
-        if (point[0]-self.centre_point[0])**2 + (point[1]-self.centre_point[1])**2 > self.radiussq:
-            return False
-        elif self.bottom <= point[2] <= self.top:
+        if (point[0]-self.centre_point[0])**2 + (point[1]-self.centre_point[1])**2 <= self.radiussq:
             return True
         else:
-            return False
+            return Falses
 
 
 def checkifPathBlocked(obstDict, trajectory):
@@ -137,10 +135,10 @@ def reconstruct_path(came_from, start, goal):
             for key in came_from:
                 f.write(str(key) + ':' + str(came_from[key]) + '  ')
             f.close()
-            f = open('cost_so_far_UAV3', 'a')
-            for key in cost_so_far:
-                f.write(str(key) + ':' + str(cost_so_far[key]) + '\t')
-            f.close()
+            # f = open('cost_so_far_UAV3', 'w')
+            # for key in cost_so_far:
+            #     f.write(str(key) + ':' + str(cost_so_far[key]) + '\t')
+            # f.close()
             path.reverse()
             return path
     # path.append(start) # optional
@@ -203,11 +201,11 @@ def callback_obst_UAV1(centre_point):
 
     obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
-                init.gridalize(0.25 *1.2, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UAV')
+                init.gridalize(0.75 *1.2, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UAV')
 
     obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
-                init.gridalize(0.25, scale_fine), init.gridalize(2, scale_fine), mapBound_grid_fine[2], 'obst_UAV')
+                init.gridalize(0.75, scale_fine), init.gridalize(2, scale_fine), mapBound_grid_fine[2], 'obst_UAV')
 
     obstDict_rough['obst_UAV1']  = obstacle_rough
     obstDict_fine['obst_UAV1']   = obstacle_fine
@@ -228,11 +226,11 @@ def callback_obst_UAV2(centre_point):
 
     obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
-                init.gridalize(0.25 *1.2, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UAV')
+                init.gridalize(0.75 *1.2, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UAV')
 
     obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
                 centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
-                init.gridalize(0.25, scale_fine), init.gridalize(2, scale_fine), mapBound_grid_fine[2], 'obst_UAV')
+                init.gridalize(0.75, scale_fine), init.gridalize(2, scale_fine), mapBound_grid_fine[2], 'obst_UAV')
 
     obstDict_rough['obst_UAV2']  = obstacle_rough
     obstDict_fine['obst_UAV2']   = obstacle_fine
@@ -504,7 +502,7 @@ def generateRefinedTrajectory(roughTrajectory):
 ###############################################################################
 ###############################################################################
 ''' Set original environment '''
-mapBound_metre = (5, 5, 3)      # 3D boundary of the operating environment
+mapBound_metre = (4.5, 4.5, 3)      # 3D boundary of the operating environment
 scale_rough = 4
 scale_fine = 50
 scaleRatio = float(scale_fine/scale_rough)

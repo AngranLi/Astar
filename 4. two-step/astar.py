@@ -137,6 +137,10 @@ def reconstruct_path(came_from, start, goal):
             for key in came_from:
                 f.write(str(key) + ':' + str(came_from[key]) + '  ')
             f.close()
+            f = open('cost_so_far', 'a')
+            for key in cost_so_far:
+                f.write(str(key) + ':' + str(cost_so_far[key]) + '\t')
+            f.close()
             path.reverse()
             return path
     # path.append(start) # optional
@@ -318,11 +322,11 @@ def generateRoughTrajectory():
     came_from, cost_so_far = a_star_search(diagram_rough, obstDict_rough, startPoint, endPoint, 1.01)
     roughTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
     execution_time = timeit.default_timer() - start_time
-    f = open('executionTime ' + experiment_time, 'a')
+    f = open(experiment_time+'_execT', 'a')
     f.write('roughPath\t'+str(execution_time)+'\n')
     f.close()
 
-    f = open('roughPath ' + experiment_time, 'a')
+    f = open(experiment_time+'_rufPath', 'a')
     f.write(str(roughTrajectory)+'\n\n\n')
     f.close()
     len_of_path = cost_so_far[endPoint]
@@ -334,11 +338,11 @@ def generateRoughTrajectory():
     print 'Vetices expanded: ', vertex_expension
     print 'Heap percolated: ', heap_percolation
 
-    f = open('pathLength ' + experiment_time, 'a')
+    f = open(experiment_time+'_pathL', 'a')
     f.write('roughPath\t'+str(len_of_path/scale_rough)+'\n')
     f.close()
 
-    f = open('heapPercolation ' + experiment_time, 'a')
+    f = open(experiment_time+'_heapPerc', 'a')
     f.write('roughPath\t'+str(heap_percolation)+'\n')
     f.close()
 
@@ -430,7 +434,7 @@ def generateRefinedTrajectory(roughTrajectory):
     came_from, cost_so_far = a_star_search(diagram_fine, obstDict_fine, startPoint, endPoint, 1.5)
     finalTrajectory = reconstruct_path(came_from, start=startPoint, goal=endPoint)
     execution_time = timeit.default_timer() - start_time
-    f = open('executionTime ' + experiment_time, 'a')
+    f = open(experiment_time+'_execT', 'a')
     f.write('refinedPath\t'+str(execution_time)+'\n')
     f.close()
 
@@ -459,11 +463,11 @@ def generateRefinedTrajectory(roughTrajectory):
     print 'Vetices expanded: ', vertex_expension
     print 'Heap percolated: ', heap_percolation
 
-    f = open('pathLength ' + experiment_time, 'a')
+    f = open(experiment_time+'_pathL', 'a')
     f.write('refinedPath\t'+str(len_of_path/scale_fine)+'\n')
     f.close()
 
-    f = open('heapPercolation ' + experiment_time, 'a')
+    f = open(experiment_time+'_heapPerc', 'a')
     f.write('refinedPath\t'+str(heap_percolation)+'\n')
     f.close()
 
