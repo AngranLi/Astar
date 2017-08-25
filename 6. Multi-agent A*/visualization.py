@@ -5,7 +5,7 @@ import init
 
 
 mapBound_metre = (4.5, 4.5, 3)      # 3D boundary of the operating environment
-scale_fine = 50
+scale_fine = 30
 mapBound_grid_fine = init.gridalize(mapBound_metre, scale_fine)
 
 def setPathMarkers(finalTrajectory, came_from):

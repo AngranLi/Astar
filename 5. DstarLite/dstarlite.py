@@ -79,7 +79,7 @@ def publishknownmaze():
     global mazegoal
     global pathPoint
 
-    print 'Publishing known maze...'
+    # rospy.logwarn('Publishing known maze...')
 
     pathPoint = init.initPathMarkers()
     knownObstPoint = init.initObstMarkers()
@@ -113,7 +113,9 @@ def publishknownmaze():
     tempPoint.y = mazestart.y
     tempPoint.z = mazestart.z
     pathPoint.points.append(tempPoint)
+    pathPoint.text = '1'
 
+    rospy.logwarn('path length: ' + str(len(pathPoint.points)))
     pathPub.publish(pathPoint)
     obstPub.publish(knownObstPoint)
 
@@ -577,7 +579,7 @@ while mazestart != mazegoal:
         # rospy.sleep(0.1)
 
         start_time = timeit.default_timer()
-        dist_min = 200
+        dist_min = 1000
         closestPoint_id = 0
         try:
             for i in range(len(pathPoint.points)):

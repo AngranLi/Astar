@@ -8,9 +8,9 @@ LARGE = 1000000
 RANDOMIZESUCCS = True           # randomize the order in which successors of a node are generated
 # WALLSTOREMOVE = 4             # number of walls to remove if RANDOMMAZE is NOT defined - infinite loop if too large
 # DEBUG = True                  # whether debugging is on - debugging takes time but performs various checks
-MAZELENGTH	= 51                # the length of the maze
-MAZEWIDTH 	= 51                # the width of the maze
-MAZEHEIGHT	= 31
+MAZELENGTH	= 71                # the length of the maze
+MAZEWIDTH 	= 71                # the width of the maze
+MAZEHEIGHT	= 46
 MAZEDENSITY = 0.10              # percentage of blocked cells if RANDOMMAZE is defined
 '''
 STARTX = random.randint(0,5)    # x coordinate of the start cell
@@ -20,9 +20,9 @@ GOALX = random.randint(int(0.8*MAZELENGTH),MAZELENGTH-1)    # x coordinate of th
 GOALY = random.randint(int(0.8*MAZEWIDTH), MAZEWIDTH-1)     # y coordinate of the goal  cell
 GOALZ = random.randint(int(0.8*MAZEHEIGHT),MAZEHEIGHT-1)
 '''
-STARTX = 40 # random.randint(int(0.8*MAZELENGTH),MAZELENGTH-1)
-STARTY = 40 # random.randint(int(0.8*MAZEWIDTH), MAZEWIDTH-1)
-STARTZ = 10 # random.randint(int(0.8*MAZEHEIGHT),MAZEHEIGHT-1)
+STARTX = 60 # random.randint(int(0.8*MAZELENGTH),MAZELENGTH-1)
+STARTY = 53 # random.randint(int(0.8*MAZEWIDTH), MAZEWIDTH-1)
+STARTZ = 23 # random.randint(int(0.8*MAZEHEIGHT),MAZEHEIGHT-1)
 GOALX = random.randint(0,5)
 GOALY = random.randint(0,5)
 GOALZ = random.randint(0,5)

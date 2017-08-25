@@ -25,7 +25,7 @@ class Cell():
         self.heapindex = 0
 
 class Obstacle():
-    def __init__(self, name, centrePoint, length=inc.MAZELENGTH/5, width=inc.MAZEWIDTH/5, height=inc.MAZEHEIGHT):
+    def __init__(self, name, centrePoint, length=inc.MAZELENGTH/4, width=inc.MAZEWIDTH/4, height=inc.MAZEHEIGHT):
         self.centrePoint = centrePoint
         self.length = length
         self.width  = width

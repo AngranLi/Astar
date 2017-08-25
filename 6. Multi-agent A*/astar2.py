@@ -215,79 +215,79 @@ def callback_obst_UAV1(centre_point):
     callback_obst_UAV1_flg = True
 
 
-def callback_obst_UAV2(centre_point):
-    # rospy.logwarn(len(diagram.walls))
-    # rospy.logwarn((centre_point.pose.position.x, centre_point.pose.position.y,
-    #                 centre_point.pose.position.z))
-    global obstDict_rough
-    global obstDict_fine
-    global pathBlocked
-    global roughTrajectory
-
-    obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
-                centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
-                init.gridalize(0.75 *1.2, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UAV')
-
-    obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
-                centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
-                init.gridalize(0.75, scale_fine), init.gridalize(2, scale_fine), mapBound_grid_fine[2], 'obst_UAV')
-
-    obstDict_rough['obst_UAV2']  = obstacle_rough
-    obstDict_fine['obst_UAV2']   = obstacle_fine
-
-    pathBlocked = checkifPathBlocked(obstDict_rough.copy(), roughTrajectory)
-
-    callback_obst_UAV2_flg = True
-
-
-def callback_obst_UGV1(centre_point):
-    # rospy.logwarn(len(diagram.walls))
-    # rospy.logwarn((centre_point.pose.position.x, centre_point.pose.position.y,
-    #                 centre_point.pose.position.z))
-    global obstDict_rough
-    global obstDict_fine
-    global pathBlocked
-    global roughTrajectory
-
-    obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
-                centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
-                init.gridalize(0.5 *1.2, scale_rough), init.gridalize(1.5, scale_rough), mapBound_grid_rough[2], 'obst_UGV')
-
-    obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
-                centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
-                init.gridalize(0.5, scale_fine), init.gridalize(1.5, scale_fine), mapBound_grid_fine[2], 'obst_UGV')
-
-    obstDict_rough['obst_UGV1']  = obstacle_rough
-    obstDict_fine['obst_UGV1']   = obstacle_fine
-
-    pathBlocked = checkifPathBlocked(obstDict_rough, roughTrajectory)
-
-    callback_obst_UGV1_flg = True
+# def callback_obst_UAV2(centre_point):
+#     # rospy.logwarn(len(diagram.walls))
+#     # rospy.logwarn((centre_point.pose.position.x, centre_point.pose.position.y,
+#     #                 centre_point.pose.position.z))
+#     global obstDict_rough
+#     global obstDict_fine
+#     global pathBlocked
+#     global roughTrajectory
+#
+#     obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
+#                 centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
+#                 init.gridalize(0.75 *1.2, scale_rough), init.gridalize(2, scale_rough), mapBound_grid_rough[2], 'obst_UAV')
+#
+#     obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
+#                 centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
+#                 init.gridalize(0.75, scale_fine), init.gridalize(2, scale_fine), mapBound_grid_fine[2], 'obst_UAV')
+#
+#     obstDict_rough['obst_UAV2']  = obstacle_rough
+#     obstDict_fine['obst_UAV2']   = obstacle_fine
+#
+#     pathBlocked = checkifPathBlocked(obstDict_rough.copy(), roughTrajectory)
+#
+#     callback_obst_UAV2_flg = True
 
 
-def callback_obst_person1(centre_point):
-    # rospy.logwarn(len(diagram.walls))
-    # rospy.logwarn((centre_point.pose.position.x, centre_point.pose.position.y,
-    #                 centre_point.pose.position.z))
-    global obstDict_rough
-    global obstDict_fine
-    global pathBlocked
-    global roughTrajectory
-
-    obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
-                centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
-                init.gridalize(1 *1.2, scale_rough), init.gridalize(3, scale_rough), mapBound_grid_rough[2], 'obst_person')
-
-    obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
-                centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
-                init.gridalize(1, scale_fine), init.gridalize(3, scale_fine), mapBound_grid_fine[2], 'obst_person')
-
-    obstDict_rough['obst_person1']  = obstacle_rough
-    obstDict_fine['obst_person1']   = obstacle_fine
-
-    pathBlocked = checkifPathBlocked(obstDict_rough, roughTrajectory)
-
-    callback_obst_person1_flg = True
+# def callback_obst_UGV1(centre_point):
+#     # rospy.logwarn(len(diagram.walls))
+#     # rospy.logwarn((centre_point.pose.position.x, centre_point.pose.position.y,
+#     #                 centre_point.pose.position.z))
+#     global obstDict_rough
+#     global obstDict_fine
+#     global pathBlocked
+#     global roughTrajectory
+#
+#     obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
+#                 centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
+#                 init.gridalize(0.5 *1.2, scale_rough), init.gridalize(1.5, scale_rough), mapBound_grid_rough[2], 'obst_UGV')
+#
+#     obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
+#                 centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
+#                 init.gridalize(0.5, scale_fine), init.gridalize(1.5, scale_fine), mapBound_grid_fine[2], 'obst_UGV')
+#
+#     obstDict_rough['obst_UGV1']  = obstacle_rough
+#     obstDict_fine['obst_UGV1']   = obstacle_fine
+#
+#     pathBlocked = checkifPathBlocked(obstDict_rough, roughTrajectory)
+#
+#     callback_obst_UGV1_flg = True
+#
+#
+# def callback_obst_person1(centre_point):
+#     # rospy.logwarn(len(diagram.walls))
+#     # rospy.logwarn((centre_point.pose.position.x, centre_point.pose.position.y,
+#     #                 centre_point.pose.position.z))
+#     global obstDict_rough
+#     global obstDict_fine
+#     global pathBlocked
+#     global roughTrajectory
+#
+#     obstacle_rough = Obstacle(init.gridalize((centre_point.pose.position.x,
+#                 centre_point.pose.position.y, centre_point.pose.position.z), scale_rough),
+#                 init.gridalize(1 *1.2, scale_rough), init.gridalize(3, scale_rough), mapBound_grid_rough[2], 'obst_person')
+#
+#     obstacle_fine = Obstacle(init.gridalize((centre_point.pose.position.x,
+#                 centre_point.pose.position.y, centre_point.pose.position.z), scale_fine),
+#                 init.gridalize(1, scale_fine), init.gridalize(3, scale_fine), mapBound_grid_fine[2], 'obst_person')
+#
+#     obstDict_rough['obst_person1']  = obstacle_rough
+#     obstDict_fine['obst_person1']   = obstacle_fine
+#
+#     pathBlocked = checkifPathBlocked(obstDict_rough, roughTrajectory)
+#
+#     callback_obst_person1_flg = True
 
 
 def callback_current(data):  # data contains the current point
@@ -504,14 +504,14 @@ def generateRefinedTrajectory(roughTrajectory):
 ''' Set original environment '''
 mapBound_metre = (4.5, 4.5, 3)      # 3D boundary of the operating environment
 scale_rough = 4
-scale_fine = 50
+scale_fine = 30
 scaleRatio = float(scale_fine/scale_rough)
 refineRatio = int((scale_fine/scale_rough)**(1.0/3))
 
 startPoint  = (0, 0, 0)
 endPoint    = (0, 0, 0)
-current_position  = (4.0, 1.0, 1.0)
-target_position   = (2.5, 2.5, 1.0)
+current_position  = (1.0, 3.5, 1.0)
+target_position   = (3.5, 1.0, 1.5)
 
 ''' Initialize ROS node and publishers '''
 rospy.init_node('astar_node', anonymous=True) # rosnode name
@@ -523,9 +523,9 @@ rate = rospy.Rate(10) # loop runs at x Hertz
 gotPath = False
 pathBlocked = True
 callback_obst_UAV1_flg = True
-callback_obst_UAV2_flg = True
-callback_obst_UGV1_flg = False
-callback_obst_person1_flg = False
+# callback_obst_UAV2_flg = True
+# callback_obst_UGV1_flg = False
+# callback_obst_person1_flg = False
 callback_current_flg = True
 callback_target_flg = True
 
@@ -554,15 +554,15 @@ roughTrajectory = []
 while callback_obst_UAV1_flg:
     obstSub = rospy.Subscriber('/UAV_1/pose', PoseStamped, callback_obst_UAV1)
     callback_obst_UAV1_flg = False
-while callback_obst_UAV2_flg:
-    obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UAV2)
-    callback_obst_UAV2_flg = False
-while callback_obst_UGV1_flg:
-    obstSub = rospy.Subscriber('/UGV_1/pose', PoseStamped, callback_obst_UGV1)
-    callback_obst_UGV1_flg = False
-while callback_obst_person1_flg:
-    obstSub = rospy.Subscriber('/person_1/pose', PoseStamped, callback_obst_person1)
-    callback_obst_person1_flg = False
+# while callback_obst_UAV2_flg:
+#     obstSub = rospy.Subscriber('/UAV_3/pose', PoseStamped, callback_obst_UAV2)
+#     callback_obst_UAV2_flg = False
+# while callback_obst_UGV1_flg:
+#     obstSub = rospy.Subscriber('/UGV_1/pose', PoseStamped, callback_obst_UGV1)
+#     callback_obst_UGV1_flg = False
+# while callback_obst_person1_flg:
+#     obstSub = rospy.Subscriber('/person_1/pose', PoseStamped, callback_obst_person1)
+#     callback_obst_person1_flg = False
 # receive current position of UAV
 while callback_current_flg:
     ppSub   = rospy.Subscriber('/UAV_2/pose', PoseStamped, callback_current)
