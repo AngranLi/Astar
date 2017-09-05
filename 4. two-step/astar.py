@@ -487,7 +487,7 @@ refineRatio = int((scale_fine/scale_rough)**(1.0/3))
 startPoint  = (0, 0, 0)
 endPoint    = (0, 0, 0)
 current_position  = (1, 1, 0.5)
-target_position   = (2.5, 3, 2.0)
+target_position   = (4, 4, 2.0)
 
 ''' Initialize ROS node and publishers '''
 rospy.init_node('astar_node', anonymous=True) # rosnode name
@@ -500,7 +500,7 @@ gotPath = False
 pathBlocked = True
 callback_obst_UAV1_flg = False
 callback_obst_UGV1_flg = False
-callback_obst_person1_flg = False
+callback_obst_person1_flg = True
 callback_current_flg = True
 callback_target_flg = True
 

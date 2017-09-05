@@ -70,9 +70,9 @@ class pub_obst():
                 self.UGV1.pose.position.z = random.uniform(1.9, 2.1)
 
                 person1_Pub.publish(self.person1)
-                self.person1.pose.position.x = random.uniform(2.0, 3.0)
-                self.person1.pose.position.y = random.uniform(2.0, 3.0)
-                self.person1.pose.position.z = random.uniform(1.5, 2.0)
+                self.person1.pose.position.x = 2 # random.uniform(2.0, 3.0)
+                self.person1.pose.position.y = 2 # random.uniform(2.0, 3.0)
+                self.person1.pose.position.z = 2 # random.uniform(1.5, 2.0)
 
             rate.sleep()
 
